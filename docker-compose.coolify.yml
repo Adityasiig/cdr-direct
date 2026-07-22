@@ -1,0 +1,22 @@
+services:
+  cdr-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    init: true
+    restart: unless-stopped
+    expose:
+      - "8090"
+    environment:
+      CDR_BACKEND_URL: "${CDR_BACKEND_URL:?Set the private CDR data-node URL}"
+      CDR_BACKEND_TOKEN: "${CDR_BACKEND_TOKEN:?Set the same private token as the data node}"
+      CDR_PUBLIC_USERNAME: "${CDR_PUBLIC_USERNAME:?Set the dashboard username}"
+      CDR_PUBLIC_PASSWORD: "${CDR_PUBLIC_PASSWORD:?Set a strong dashboard password}"
+      CDR_PROXY_TIMEOUT: "${CDR_PROXY_TIMEOUT:-370}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    stop_grace_period: 30s

@@ -1,0 +1,65 @@
+services:
+  cdr-data-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DUCKDB_VERSION: "1.5.4"
+    init: true
+    restart: unless-stopped
+    expose:
+      - "8090"
+    environment:
+      CDR_AUTH_TOKEN: "${CDR_BACKEND_TOKEN:?Set the private backend token}"
+      CDR_ROOT: /data/raw
+      CDR_APP_DATA_ROOT: /data/runtime
+      CDR_PARQUET_ROOT: /data/parquet
+      CDR_DB_PATH: /data/runtime/cdrdata.duckdb
+      CDR_CACHE_DB: /data/runtime/cache.sqlite
+      CDR_DUCKDB_BIN: /usr/local/bin/duckdb
+      CDR_ENABLE_SQL: "0"
+      CDR_DUCKDB_THREADS: "${CDR_DUCKDB_THREADS:-16}"
+      CDR_DUCKDB_MEMORY_LIMIT: "${CDR_DUCKDB_MEMORY_LIMIT:-64GB}"
+      CDR_WEB_WORKERS: "1"
+      CDR_WEB_THREADS: "${CDR_WEB_THREADS:-2}"
+    volumes:
+      - type: bind
+        source: ${CDR_RAW_HOST_PATH:?Set the raw CDR directory}
+        target: /data/raw
+        read_only: true
+      - type: bind
+        source: ${CDR_RUNTIME_HOST_PATH:-/var/lib/cdr-direct/runtime}
+        target: /data/runtime
+      - type: bind
+        source: ${CDR_PARQUET_HOST_PATH:-/var/lib/cdr-direct/parquet}
+        target: /data/parquet
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    stop_grace_period: 30s
+
+  cdr-api-gateway:
+    image: caddy:2-alpine
+    init: true
+    restart: unless-stopped
+    depends_on:
+      cdr-data-node:
+        condition: service_healthy
+    environment:
+      CDR_API_DOMAIN: "${CDR_API_DOMAIN:?Set the public API hostname}"
+      COOLIFY_PUBLIC_IP: "${COOLIFY_PUBLIC_IP:?Set the Coolify server public IP or CIDR}"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.data-node:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    stop_grace_period: 15s
+
+volumes:
+  caddy-data:
+  caddy-config:

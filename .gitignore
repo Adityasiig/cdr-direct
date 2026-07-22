@@ -1,0 +1,26 @@
+# Data & caches (never commit - real CDR billing data)
+*.duckdb
+*.sqlite
+*.sqlite3
+*.parquet
+cache.sqlite
+cdrdata.duckdb
+
+# Secrets
+*token*
+.env
+.env.*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Backups / scratch
+*.bak
+*.bak-*
+*.pre-*
+_bak_*/

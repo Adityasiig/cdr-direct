@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for completed 46Labs CDR files every ten minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10min
+Persistent=true
+Unit=cdr-data-ingest.service
+
+[Install]
+WantedBy=timers.target

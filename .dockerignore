@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+.venv
+__pycache__
+*.pyc
+*.duckdb
+*.sqlite
+*.sqlite3
+*.parquet
+*.csv
+*.csv.gz
+*.log
+.env
+.env.*
+tests

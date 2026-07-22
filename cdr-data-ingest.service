@@ -1,0 +1,9 @@
+[Unit]
+Description=Ingest stable 46Labs CDR files into the private DuckDB data node
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/cdr-direct
+ExecStart=/usr/bin/docker compose -f docker-compose.data-node.yml exec -T cdr-data-node python nightly_append.py

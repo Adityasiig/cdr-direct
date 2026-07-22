@@ -1,0 +1,41 @@
+services:
+  cdr-direct:
+    build:
+      context: .
+      args:
+        DUCKDB_VERSION: "1.5.4"
+    init: true
+    restart: unless-stopped
+    expose:
+      - "8090"
+    environment:
+      CDR_AUTH_TOKEN: "${CDR_AUTH_TOKEN:?Set CDR_AUTH_TOKEN}"
+      CDR_ROOT: /data/raw
+      CDR_APP_DATA_ROOT: /data/runtime
+      CDR_PARQUET_ROOT: /data/parquet
+      CDR_DB_PATH: /data/runtime/cdrdata.duckdb
+      CDR_CACHE_DB: /data/runtime/cache.sqlite
+      CDR_DUCKDB_BIN: /usr/local/bin/duckdb
+      CDR_ENABLE_SQL: "0"
+      CDR_DUCKDB_THREADS: "${CDR_DUCKDB_THREADS:-8}"
+      CDR_DUCKDB_MEMORY_LIMIT: "${CDR_DUCKDB_MEMORY_LIMIT:-8GB}"
+      CDR_WEB_WORKERS: "1"
+      CDR_WEB_THREADS: "4"
+    volumes:
+      - type: bind
+        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}
+        target: /data/raw
+        read_only: true
+      - cdr-runtime:/data/runtime
+      - cdr-parquet:/data/parquet
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    stop_grace_period: 30s
+
+volumes:
+  cdr-runtime:
+  cdr-parquet:

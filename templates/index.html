@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="cdr-auth-mode" content="{{ auth_mode|default('token') }}">
+  <title>CDR Direct — 46labs USA Per-Code Analysis</title>
+  <link rel="stylesheet" href="/static/style.css?v=13">
+</head>
+<body>
+  <!-- ─── Header ─── -->
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>CDR Direct <span class="muted">— 46labs</span></h1>
+    </div>
+    <div class="env-tag">
+      USA Per-Code Analysis
+      <span class="pill" id="window-label">—</span>
+      <span class="pill cache-pill" id="cache-pill" title="Cache freshness — click to force refresh">—</span>
+    </div>
+    <button id="btn-force-refresh" class="link" title="Bypass cache and recompute now">↻ Force refresh</button>
+    <button id="btn-auto" class="link" title="Auto-refresh on filter change">⚡ Auto: Off</button>
+    <button id="btn-logout" class="link" title="Forget stored token">Logout</button>
+  </header>
+
+  <main>
+    <!-- ─── Filters ─── -->
+    <section class="filters card">
+      <div class="row">
+
+        <div class="field">
+          <label>Date range</label>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <input type="date" id="start-date">
+            <span class="muted" style="font-size:0.78rem;">→</span>
+            <input type="date" id="end-date">
+          </div>
+          <div class="preset-bar" id="date-presets">
+            <button class="preset" data-preset="today">Today</button>
+            <button class="preset active" data-preset="yesterday">Yesterday</button>
+            <button class="preset" data-preset="last3">Last 3d</button>
+            <button class="preset" data-preset="last7">Last 7d</button>
+            <button class="preset" data-preset="last30">Last 30d</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Hour range <span class="muted" style="font-weight:400;">(UTC)</span></label>
+          <div style="display:flex; gap:0.4rem; align-items:center;">
+            <select id="start-hour" style="min-width:75px;">
+              <option value="">All</option>
+            </select>
+            <span class="muted" style="font-size:0.78rem;">→</span>
+            <select id="end-hour" style="min-width:75px;">
+              <option value="">All</option>
+            </select>
+          </div>
+          <div class="preset-bar" id="hour-presets">
+            <button class="preset active" data-hour-preset="all">All 24h</button>
+            <button class="preset" data-hour-preset="peak-us">US Peak 14-22</button>
+            <button class="preset" data-hour-preset="business">Bus 09-17</button>
+            <button class="preset" data-hour-preset="overnight">Overnight 22-06</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Entities</label>
+          <div class="chip-group" id="entity-chips">
+            <button class="chip active" data-entity="MyCallConnect">MCC</button>
+            <button class="chip active" data-entity="SalamTalk">ST</button>
+            <button class="chip active" data-entity="Dialphone">DP</button>
+            <button class="chip active" data-entity="Vestacall">VC</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>SIP codes</label>
+          <div class="chip-group" id="sip-chips">
+            <button class="chip" data-sip="200">200</button>
+            <button class="chip" data-sip="404">404</button>
+            <button class="chip" data-sip="486">486</button>
+            <button class="chip" data-sip="503">503</button>
+            <button class="chip active" data-sip="all">All</button>
+          </div>
+        </div>
+
+        <div class="field grow" id="reason-field" style="display:none">
+          <label>
+            503 reason
+            <span class="customer-badge">why the 503 fired</span>
+          </label>
+          <div class="chip-group" id="reason-chips">
+            <button class="chip" data-reason="NO_VENDOR_RATE">No vendor rate</button>
+            <button class="chip" data-reason="NO_CUSTOMER_RATE">No customer rate</button>
+            <button class="chip" data-reason="LIMITS_EXCEEDED">Limit exceeded</button>
+            <button class="chip" data-reason="ROUTES_EXHAUSTED">Routes exhausted</button>
+            <button class="chip" data-reason="CARRIER_REJECT">Carrier reject</button>
+            <button class="chip" data-reason="EX_ROUTING_BLOCK">Routing block</button>
+            <button class="chip" data-reason="EMPTY_TG_LIST">Empty TG</button>
+            <button class="chip" data-reason="LOOP_BLOCKED">Loop blocked</button>
+            <button class="chip" data-reason="SPAM_FILTER">Spam filter</button>
+            <button class="chip" data-reason="CALL_FAILURE">Call failure</button>
+          </div>
+        </div>
+
+
+        <div class="field grow">
+          <label for="customer-search">
+            Origin trunk
+            <span id="customer-badge" class="customer-badge">all entities</span>
+          </label>
+          <input type="text" id="customer-search" list="customer-list" placeholder="All — or type exact trunk (auto-fills after query)" autocomplete="off">
+          <datalist id="customer-list"></datalist>
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="btn-run" class="btn-primary">▶ Run query</button>
+        </div>
+
+      </div>
+
+      <!-- ─── Quick actions ─── -->
+      <div class="quick-actions" id="quick-actions">
+        <span class="qa-label">Quick views:</span>
+        <button class="qa-btn" data-qa="worst-margin"><span class="icon">💸</span> Worst margin (losses)</button>
+        <button class="qa-btn" data-qa="top-revenue"><span class="icon">💰</span> Top revenue</button>
+        <button class="qa-btn" data-qa="top-traffic"><span class="icon">📞</span> Top traffic</button>
+        <button class="qa-btn" data-qa="fas-suspect"><span class="icon">🚨</span> FAS suspects (ASR &lt; 15%)</button>
+        <button class="qa-btn" data-qa="profitable"><span class="icon">✅</span> Profitable only</button>
+        <button class="qa-btn" data-qa="clear"><span class="icon">✕</span> Clear filter</button>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <!-- ─── Headline stats ─── -->
+    <section class="headline">
+      <div class="stat-card">
+        <span class="stat-label">Attempts</span>
+        <span class="stat-value" id="stat-attempts">—</span>
+        <span class="stat-sub" id="stat-attempts-sub">total inbound</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Completions</span>
+        <span class="stat-value" id="stat-completions">—</span>
+        <span class="stat-sub" id="stat-completions-sub">SIP 200 OK</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">ASR %</span>
+        <span class="stat-value" id="stat-asr">—</span>
+        <span class="stat-sub">answer-seizure ratio</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Minutes</span>
+        <span class="stat-value" id="stat-minutes">—</span>
+        <span class="stat-sub">billed (completed)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Revenue</span>
+        <span class="stat-value" id="stat-revenue">—</span>
+        <span class="stat-sub">customer billing</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Cost</span>
+        <span class="stat-value" id="stat-cost">—</span>
+        <span class="stat-sub">vendor billing</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Margin</span>
+        <span class="stat-value" id="stat-margin">—</span>
+        <span class="stat-sub" id="stat-margin-sub">profit / loss</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Distinct codes</span>
+        <span class="stat-value" id="stat-codes">—</span>
+        <span class="stat-sub" id="stat-codes-sub">destinations</span>
+      </div>
+    </section>
+
+    <!-- ─── Per-code / per-(origin-trunk,code) table ─── -->
+    <section class="table-card card view-code" id="table-card">
+      <div class="table-toolbar">
+        <span class="row-count"><strong id="row-count">0</strong> rows</span>
+        <input type="text" id="filter-input" placeholder="Filter loaded rows (code, state, ratecenter, origin trunk)…">
+        <button id="btn-csv" class="btn-secondary">⬇ CSV</button>
+      </div>
+      <div class="table-scroll" id="table-scroll">
+        <table id="results-table">
+          <thead>
+            <tr id="head-row">
+              <th data-sort="customer" class="col-customer">Origin trunk</th>
+              <th data-sort="code">Code</th>
+              <th data-sort="state">State</th>
+              <th data-sort="ratecenter">Ratecenter</th>
+              <th data-sort="x5u_url">STIR X5U</th>
+              <th data-sort="attest">Attest</th>
+              <th data-sort="attempts" class="num">Attempts</th>
+              <th data-sort="completions" class="num">Completions</th>
+              <th data-sort="asr_pct" class="num">ASR %</th>
+              <th data-sort="minutes" class="num">Minutes</th>
+              <th data-sort="revenue" class="num">Revenue</th>
+              <th data-sort="cost" class="num">Cost</th>
+              <th data-sort="margin" class="num">Margin</th>
+            </tr>
+          </thead>
+          <tbody id="results-body">
+            <tr><td colspan="13" class="muted center">No data yet — pick a date and click <strong>Run query</strong> (or enable ⚡ Auto)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- ─── Token modal ─── -->
+  <div id="token-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>🔐 Auth required</h2>
+      <p>
+        Paste your <code>X-Auth-Token</code> for the cdr-direct API.
+        Stored in this browser's localStorage only and sent only to this CDR Direct server.
+      </p>
+      <input type="password" id="token-input" placeholder="OTyour…" autocomplete="off">
+      <div class="modal-buttons">
+        <button id="btn-token-save" class="btn-primary">Save &amp; continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=15"></script>
+</body>
+</html>
