@@ -134,6 +134,51 @@ class QueryLogicTests(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(error[1], 413)
 
+    def test_streamed_customer_export_can_read_raw_files_without_a_row_limit(self):
+        with tempfile.TemporaryDirectory() as root:
+            source = Path(root, 'Dialphone', '2026', '07', '21', '00.csv.gz')
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b'cdr')
+            body = {
+                'start_date': '2026-07-21', 'end_date': '2026-07-21',
+                'entities': ['Dialphone'], 'sip_codes': [200],
+                'sort_by': 'customer', 'sort_dir': 'asc',
+            }
+            parsed, error = api.validate_body(body)
+            self.assertIsNone(error)
+            with mock.patch.object(api, 'CDR_ROOT', root):
+                sql, error = api.build_customer_codes_export_sql(parsed, use_db=False)
+            self.assertIsNone(error)
+            self.assertIn('read_csv_auto', sql)
+            self.assertIn('AS origin_trunk', sql)
+            self.assertIn('ORDER BY origin_trunk ASC', sql)
+            self.assertNotIn('LIMIT ', sql.upper())
+
+    def test_csv_ticket_is_short_lived_and_contains_validated_filters(self):
+        old_token = api.AUTH_TOKEN
+        try:
+            api.AUTH_TOKEN = 'test-token'
+            client = api.app.test_client()
+            response = client.post(
+                '/api/usa-customer-codes/csv-ticket',
+                json={
+                    'start_date': '2026-07-21',
+                    'end_date': '2026-07-21',
+                    'entities': ['MyCallConnect'],
+                    'sip_codes': [200],
+                },
+                headers={'X-Auth-Token': 'test-token'},
+            )
+            self.assertEqual(response.status_code, 200)
+            payload = response.get_json()
+            self.assertIn('/api/usa-customer-codes/csv?ticket=', payload['download_url'])
+            ticket = payload['download_url'].split('ticket=', 1)[1]
+            decoded = api.csv_ticket_serializer().loads(ticket, max_age=600)
+            self.assertEqual(decoded['entities'], ['MyCallConnect'])
+            self.assertEqual(decoded['sip_codes'], [200])
+        finally:
+            api.AUTH_TOKEN = old_token
+
 
 class SecurityAndUiTests(unittest.TestCase):
     def test_raw_sql_is_disabled_by_default(self):

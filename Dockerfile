@@ -40,4 +40,4 @@ EXPOSE 8090
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=3)" || exit 1
 
-CMD ["sh", "-c", "exec gunicorn --workers ${CDR_WEB_WORKERS:-1} --threads ${CDR_WEB_THREADS:-4} --bind 0.0.0.0:8090 --timeout 360 --access-logfile - --error-logfile - api:app"]
+CMD ["sh", "-c", "exec gunicorn --workers ${CDR_WEB_WORKERS:-1} --threads ${CDR_WEB_THREADS:-4} --bind 0.0.0.0:8090 --timeout ${CDR_WEB_TIMEOUT:-1800} --access-logfile - --error-logfile - api:app"]

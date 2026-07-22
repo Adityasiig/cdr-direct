@@ -33,6 +33,8 @@ ALLOWED_API_ROUTES = {
     ('POST', '/api/usa-codes'),
     ('POST', '/api/usa-customer-codes'),
     ('POST', '/api/usa-customer-codes/csv'),
+    ('POST', '/api/usa-customer-codes/csv-ticket'),
+    ('GET', '/api/usa-customer-codes/csv'),
     ('POST', '/api/stir-x5u'),
     ('POST', '/api/stir-x5u/csv'),
     ('POST', '/api/customers'),

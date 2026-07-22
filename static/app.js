@@ -938,14 +938,14 @@
   }
   el.btnRun.addEventListener('click', runQuery);
 
-  // ─── CSV export (fetches FULL unlimited dataset from server) ────────
+  // ─── CSV export (server streams DuckDB output directly to disk) ───
   el.btnCsv.addEventListener('click', async () => {
     if (!PROXY_AUTH && !state.token) { ensureToken(); return; }
-    const endpoint = '/api/usa-customer-codes/csv';
+    const endpoint = '/api/usa-customer-codes/csv-ticket';
     const body = getQueryBody();
-    delete body.limit;  // force full
+    delete body.limit;
     const totalHint = state.totalRowCount ? state.totalRowCount.toLocaleString() : '';
-    setStatus('⬇ Building full CSV' + (totalHint ? ' (' + totalHint + ' rows)' : '') + ' — 20-60s depending on size…', 'loading');
+    setStatus('Preparing full CSV' + (totalHint ? ' (' + totalHint + ' rows)' : '') + '…', 'loading');
     try {
       const resp = await fetch(endpoint, {
         method: 'POST',
@@ -957,18 +957,20 @@
         try { detail = (await resp.json()).error || detail; } catch (ignore) {}
         throw new Error(detail);
       }
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
+      const ticket = await resp.json();
+      if (!ticket.download_url) throw new Error('server did not return a download link');
       const a = document.createElement('a');
-      a.href = url;
-      const viewSuffix = 'customer_codes';
-      a.download = 'cdr_usa_' + viewSuffix + '_' + el.startDate.value + '_to_' + el.endDate.value + '.csv';
+      a.href = ticket.download_url;
+      a.download = '';
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      const kb = Math.round(blob.size / 1024);
-      setStatus('✓ Downloaded ' + (kb > 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB') + ' CSV', 'success');
+      setStatus(
+        'CSV export started' + (totalHint ? ' for ' + totalHint + ' rows' : '') +
+        '. Keep this page open until the browser download appears.',
+        'success'
+      );
     } catch (e) {
       setStatus('CSV export failed: ' + e.message, 'error');
     }

@@ -20,10 +20,12 @@ import re
 import json
 import time
 import glob
+import tempfile
 from flask import (
-    Flask, request, jsonify, Response, render_template, send_from_directory,
+    Flask, request, jsonify, Response, redirect, render_template, send_from_directory,
     stream_with_context,
 )
+from itsdangerous import BadData, URLSafeTimedSerializer
 
 import cache  # local module — auto-inits SQLite on import
 import db     # local module — DuckDB native DB
@@ -864,6 +866,11 @@ def ready():
     return jsonify({'ok': ok, 'service': 'cdr-direct', 'checks': checks}), (200 if ok else 503)
 
 
+@app.route('/', methods=['GET'])
+def root():
+    return redirect('/ui')
+
+
 @app.route('/ui', methods=['GET'])
 def ui():
     return render_template('index.html')
@@ -993,6 +1000,145 @@ def csv_response(rows, columns, filename):
     )
 
 
+def build_customer_codes_export_sql(parsed, use_db):
+    """Build an unlimited, validated aggregate query for streamed CSV export."""
+    if use_db:
+        source_sql = 'cdr_records'
+        where_sql = build_db_where(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['sip_codes'], parsed['customer'],
+            parsed['start_hour'], parsed['end_hour'],
+            reasons=parsed['reasons'],
+        )
+    else:
+        globs = build_csv_glob(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['start_hour'], parsed['end_hour'],
+        )
+        if not globs or not any(glob.glob(path[1:-1]) for path in globs):
+            return None, 'no raw CDR files were found for the selected period'
+        type_overrides = ', '.join(
+            "'{}': '{}'".format(name, value)
+            for name, value in db.TYPE_OVERRIDES.items()
+        )
+        source_sql = (
+            "read_csv_auto([{files}], union_by_name=true, ignore_errors=true, "
+            "types={{ {types} }})"
+        ).format(files=','.join(globs), types=type_overrides)
+        where_sql = build_where(
+            parsed['sip_codes'], parsed['customer'], parsed['reasons'],
+        )
+
+    grouped_sql = """
+      SELECT
+        COALESCE(orig_trunk_group_name, '(none)') AS origin_trunk,
+        substring(to_did, 2, 6) AS code,
+        COALESCE(term_state, '?') AS state,
+        COALESCE(term_ratecenter, '?') AS ratecenter,
+        ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
+        ANY_VALUE(COALESCE(NULLIF(stir_attest, ''), '?')) AS attest,
+        COUNT(*) AS attempts,
+        COUNT(*) FILTER (WHERE sip_code = 200) AS completions,
+        ROUND(100.0 * COUNT(*) FILTER (WHERE sip_code = 200) / NULLIF(COUNT(*), 0), 2) AS asr_pct,
+        ROUND(SUM(orig_billed_duration) FILTER (WHERE sip_code = 200) / 60.0, 2) AS minutes,
+        ROUND(SUM(orig_cost), 4) AS revenue,
+        ROUND(SUM(term_cost), 4) AS cost,
+        ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
+      FROM {source}
+      WHERE {where}
+      GROUP BY origin_trunk, code, state, ratecenter
+    """.format(source=source_sql, where=where_sql)
+
+    row_filter = ''
+    if parsed['quick_filter'] == 'fas-suspect':
+        row_filter = 'WHERE asr_pct < 15 AND attempts >= 50'
+    elif parsed['quick_filter'] == 'profitable':
+        row_filter = 'WHERE margin > 0'
+
+    sort_by = parsed['sort_by']
+    if sort_by == 'customer':
+        sort_by = 'origin_trunk'
+    sql = """
+      SELECT
+        origin_trunk, code, state, ratecenter, x5u_url, attest,
+        attempts, completions, asr_pct, minutes, revenue, cost, margin
+      FROM ({grouped}) grouped
+      {row_filter}
+      ORDER BY {sort_by} {sort_dir}, origin_trunk ASC, code ASC
+    """.format(
+        grouped=grouped_sql,
+        row_filter=row_filter,
+        sort_by=sort_by,
+        sort_dir=parsed['sort_dir'].upper(),
+    )
+    return sql, None
+
+
+def stream_duckdb_csv(sql, filename, use_db):
+    """Stream DuckDB COPY output without materializing the result in Python."""
+    configured_sql = (
+        "PRAGMA threads={}; PRAGMA memory_limit='{}'; "
+        "COPY ({}) TO '/dev/stdout' WITH (FORMAT CSV, HEADER);"
+    ).format(DUCKDB_THREADS, DUCKDB_MEMORY_LIMIT, sql)
+    command = [DUCKDB]
+    if use_db:
+        command.append(db.DB_PATH)
+    command.extend(['-c', configured_sql])
+
+    error_log = tempfile.TemporaryFile()
+    try:
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=error_log,
+            bufsize=0,
+        )
+    except OSError as exc:
+        error_log.close()
+        return None, 'duckdb unavailable: {}'.format(exc)
+
+    @stream_with_context
+    def generate():
+        return_code = None
+        try:
+            while True:
+                chunk = process.stdout.read(256 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+            return_code = process.wait()
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+            process.stdout.close()
+            if return_code not in (None, 0):
+                error_log.seek(0)
+                message = error_log.read(1000).decode('utf-8', errors='replace').strip()
+                print('[csv-export] duckdb failed:', message or 'exit {}'.format(return_code))
+            error_log.close()
+
+    return Response(
+        generate(),
+        mimetype='text/csv',
+        headers={
+            'Content-Disposition': 'attachment; filename="{}"'.format(filename),
+            'Cache-Control': 'no-store',
+            'X-Accel-Buffering': 'no',
+        },
+    ), None
+
+
+def csv_ticket_serializer():
+    if not AUTH_TOKEN:
+        return None
+    return URLSafeTimedSerializer(AUTH_TOKEN, salt='cdr-direct-csv-v1')
+
+
 def prepare_export(body, compute_fn):
     """Validate/cap an export and require the safe native-DB query path."""
     export_body = dict(body or {})
@@ -1034,22 +1180,58 @@ def api_usa_codes_csv():
     return csv_response(result.get('rows') or [], cols, fn)
 
 
-@app.route('/api/usa-customer-codes/csv', methods=['POST'])
-def api_usa_customer_codes_csv():
+@app.route('/api/usa-customer-codes/csv-ticket', methods=['POST'])
+def api_usa_customer_codes_csv_ticket():
     if not check_auth():
         return jsonify({'error': 'unauthorized'}), 401
     body = request.get_json() or {}
-    result, export_error = prepare_export(body, compute_usa_customer_codes)
-    if export_error:
-        return jsonify(export_error[0]), export_error[1]
-    cols = ['origin_trunk', 'code', 'state', 'ratecenter', 'x5u_url', 'attest', 'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin']
-    rows = (
-        dict(row, origin_trunk=row.get('customer'))
-        for row in (result.get('rows') or [])
+    parsed, validation_error = validate_body(body)
+    if validation_error:
+        return jsonify(validation_error[0]), validation_error[1]
+    serializer = csv_ticket_serializer()
+    if serializer is None:
+        return jsonify({'error': 'CSV export authentication is not configured'}), 503
+    ticket = serializer.dumps(parsed)
+    return jsonify({
+        'download_url': '/api/usa-customer-codes/csv?ticket={}'.format(ticket),
+        'expires_in': 600,
+    })
+
+
+@app.route('/api/usa-customer-codes/csv', methods=['GET', 'POST'])
+def api_usa_customer_codes_csv():
+    if request.method == 'GET':
+        serializer = csv_ticket_serializer()
+        if serializer is None:
+            return jsonify({'error': 'CSV export authentication is not configured'}), 503
+        try:
+            body = serializer.loads(request.args.get('ticket', ''), max_age=600)
+        except BadData:
+            return jsonify({'error': 'CSV download link is invalid or expired'}), 401
+    else:
+        # Backward compatibility for older dashboard builds and API clients.
+        if not check_auth():
+            return jsonify({'error': 'unauthorized'}), 401
+        body = request.get_json() or {}
+
+    parsed, validation_error = validate_body(body)
+    if validation_error:
+        return jsonify(validation_error[0]), validation_error[1]
+
+    use_db = all_entities_days_in_db(
+        parsed['entities'], parsed['start_date'], parsed['end_date'],
     )
-    sd = body.get('start_date', ''); ed = body.get('end_date', sd)
-    fn = 'cdr_usa_customer_codes_{}_to_{}.csv'.format(sd, ed)
-    return csv_response(rows, cols, fn)
+    sql, query_error = build_customer_codes_export_sql(parsed, use_db)
+    if query_error:
+        return jsonify({'error': query_error}), 404
+
+    filename = 'cdr_usa_customer_codes_{}_to_{}.csv'.format(
+        parsed['start_date'], parsed['end_date'],
+    )
+    response, stream_error = stream_duckdb_csv(sql, filename, use_db)
+    if stream_error:
+        return jsonify({'error': stream_error}), 503
+    return response
 
 
 

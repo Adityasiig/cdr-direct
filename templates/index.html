@@ -4,34 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="cdr-auth-mode" content="{{ auth_mode|default('token') }}">
-  <title>CDR Direct — 46labs USA Per-Code Analysis</title>
-  <link rel="stylesheet" href="/static/style.css?v=13">
+  <title>CDR Reports | 46labs</title>
+  <link rel="stylesheet" href="/static/style.css?v=14">
 </head>
 <body>
-  <!-- ─── Header ─── -->
   <header>
     <div class="brand">
-      <span class="dot"></span>
-      <h1>CDR Direct <span class="muted">— 46labs</span></h1>
+      <span class="brand-mark">46</span>
+      <div>
+        <h1>CDR Reports</h1>
+        <span class="brand-subtitle">46labs analytics</span>
+      </div>
     </div>
     <div class="env-tag">
-      USA Per-Code Analysis
+      <strong>USA per-code</strong>
       <span class="pill" id="window-label">—</span>
       <span class="pill cache-pill" id="cache-pill" title="Cache freshness — click to force refresh">—</span>
     </div>
-    <button id="btn-force-refresh" class="link" title="Bypass cache and recompute now">↻ Force refresh</button>
-    <button id="btn-auto" class="link" title="Auto-refresh on filter change">⚡ Auto: Off</button>
-    <button id="btn-logout" class="link" title="Forget stored token">Logout</button>
+    <div class="header-actions">
+      <button id="btn-force-refresh" class="link" title="Bypass cache and recompute now">Refresh</button>
+      <button id="btn-auto" class="link" title="Auto-refresh on filter change">Auto: Off</button>
+      <button id="btn-logout" class="link" title="Forget stored token">Logout</button>
+    </div>
   </header>
 
   <main>
-    <!-- ─── Filters ─── -->
     <section class="filters card">
+      <div class="section-heading">
+        <div>
+          <h2>CDR search</h2>
+          <p>Choose a traffic window, then run the report.</p>
+        </div>
+      </div>
       <div class="row">
 
         <div class="field">
           <label>Date range</label>
-          <div style="display:flex; gap:0.4rem; align-items:center;">
+          <div class="input-row">
             <input type="date" id="start-date">
             <span class="muted" style="font-size:0.78rem;">→</span>
             <input type="date" id="end-date">
@@ -47,7 +56,7 @@
 
         <div class="field">
           <label>Hour range <span class="muted" style="font-weight:400;">(UTC)</span></label>
-          <div style="display:flex; gap:0.4rem; align-items:center;">
+          <div class="input-row">
             <select id="start-hour" style="min-width:75px;">
               <option value="">All</option>
             </select>
@@ -116,26 +125,24 @@
 
         <div class="field">
           <label>&nbsp;</label>
-          <button id="btn-run" class="btn-primary">▶ Run query</button>
+          <button id="btn-run" class="btn-primary">Run report</button>
         </div>
 
       </div>
 
-      <!-- ─── Quick actions ─── -->
       <div class="quick-actions" id="quick-actions">
-        <span class="qa-label">Quick views:</span>
-        <button class="qa-btn" data-qa="worst-margin"><span class="icon">💸</span> Worst margin (losses)</button>
-        <button class="qa-btn" data-qa="top-revenue"><span class="icon">💰</span> Top revenue</button>
-        <button class="qa-btn" data-qa="top-traffic"><span class="icon">📞</span> Top traffic</button>
-        <button class="qa-btn" data-qa="fas-suspect"><span class="icon">🚨</span> FAS suspects (ASR &lt; 15%)</button>
-        <button class="qa-btn" data-qa="profitable"><span class="icon">✅</span> Profitable only</button>
-        <button class="qa-btn" data-qa="clear"><span class="icon">✕</span> Clear filter</button>
+        <span class="qa-label">Quick views</span>
+        <button class="qa-btn" data-qa="worst-margin">Worst margin</button>
+        <button class="qa-btn" data-qa="top-revenue">Top revenue</button>
+        <button class="qa-btn" data-qa="top-traffic">Top traffic</button>
+        <button class="qa-btn" data-qa="fas-suspect">Low ASR (&lt;15%)</button>
+        <button class="qa-btn" data-qa="profitable">Profitable only</button>
+        <button class="qa-btn" data-qa="clear">Clear</button>
       </div>
 
       <div id="status" class="status"></div>
     </section>
 
-    <!-- ─── Headline stats ─── -->
     <section class="headline">
       <div class="stat-card">
         <span class="stat-label">Attempts</span>
@@ -179,12 +186,11 @@
       </div>
     </section>
 
-    <!-- ─── Per-code / per-(origin-trunk,code) table ─── -->
     <section class="table-card card view-code" id="table-card">
       <div class="table-toolbar">
         <span class="row-count"><strong id="row-count">0</strong> rows</span>
         <input type="text" id="filter-input" placeholder="Filter loaded rows (code, state, ratecenter, origin trunk)…">
-        <button id="btn-csv" class="btn-secondary">⬇ CSV</button>
+        <button id="btn-csv" class="btn-secondary">Export CSV</button>
       </div>
       <div class="table-scroll" id="table-scroll">
         <table id="results-table">
@@ -213,10 +219,9 @@
     </section>
   </main>
 
-  <!-- ─── Token modal ─── -->
   <div id="token-modal" class="modal hidden">
     <div class="modal-content">
-      <h2>🔐 Auth required</h2>
+      <h2>Authentication required</h2>
       <p>
         Paste your <code>X-Auth-Token</code> for the cdr-direct API.
         Stored in this browser's localStorage only and sent only to this CDR Direct server.
@@ -228,6 +233,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=15"></script>
+  <script src="/static/app.js?v=16"></script>
 </body>
 </html>

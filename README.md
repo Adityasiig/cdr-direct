@@ -56,9 +56,11 @@ Important controls:
 
 - `CDR_MAX_QUERY_DAYS=31`
 - `CDR_MAX_RESULT_ROWS=5000`
-- `CDR_CSV_EXPORT_MAX_ROWS=100000`
+- `CDR_CSV_EXPORT_MAX_ROWS=100000` (legacy per-code/STIR exports; the main
+  origin-trunk export streams without this row cap)
 - `CDR_DUCKDB_THREADS=8`
 - `CDR_DUCKDB_MEMORY_LIMIT=8GB`
+- `CDR_WEB_TIMEOUT=1800` (allows large streamed exports up to 30 minutes)
 - `CDR_ENABLE_SQL=0` (recommended; arbitrary SQL is not required by the UI)
 - `CDR_AUTH_TOKEN=...` or `CDR_TOKEN_FILE=/etc/cdr-direct-token`
 
@@ -70,12 +72,14 @@ Important controls:
 | GET | `/ui` | Dashboard |
 | POST | `/api/usa-codes` | Per-NPANXX aggregates |
 | POST | `/api/usa-customer-codes` | Per-origin-trunk/NPANXX aggregates |
-| POST | `/api/usa-customer-codes/csv` | Capped, streamed CSV export |
+| POST | `/api/usa-customer-codes/csv-ticket` | Create a signed 10-minute download link |
+| GET | `/api/usa-customer-codes/csv` | Unlimited, direct DuckDB CSV stream |
 | GET | `/api/cache-stats` | Cache diagnostics |
 | GET | `/api/db-stats` | Ingestion diagnostics |
 | POST | `/sql` | Disabled by default |
 
-All `/api/*` and `/sql` calls require `X-Auth-Token`.
+All API creation/query calls require `X-Auth-Token`. The CSV download GET uses
+the short-lived signed ticket returned by the authenticated ticket endpoint.
 
 ## Development checks
 

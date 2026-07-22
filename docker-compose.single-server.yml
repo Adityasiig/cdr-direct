@@ -21,10 +21,23 @@ services:
       CDR_DUCKDB_MEMORY_LIMIT: "${CDR_DUCKDB_MEMORY_LIMIT:-8GB}"
       CDR_WEB_WORKERS: "1"
       CDR_WEB_THREADS: "4"
+      CDR_WEB_TIMEOUT: "${CDR_WEB_TIMEOUT:-1800}"
     volumes:
       - type: bind
-        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}
-        target: /data/raw
+        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/MyCallConnect
+        target: /data/raw/MyCallConnect
+        read_only: true
+      - type: bind
+        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/SalamTalk
+        target: /data/raw/SalamTalk
+        read_only: true
+      - type: bind
+        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/Dialphone
+        target: /data/raw/Dialphone
+        read_only: true
+      - type: bind
+        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/Vestacall
+        target: /data/raw/Vestacall
         read_only: true
       - cdr-runtime:/data/runtime
       - cdr-parquet:/data/parquet
