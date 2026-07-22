@@ -24,19 +24,19 @@ services:
       CDR_WEB_TIMEOUT: "${CDR_WEB_TIMEOUT:-1800}"
     volumes:
       - type: bind
-        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/MyCallConnect
+        source: /root/MyCallConnect
         target: /data/raw/MyCallConnect
         read_only: true
       - type: bind
-        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/SalamTalk
+        source: /root/SalamTalk
         target: /data/raw/SalamTalk
         read_only: true
       - type: bind
-        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/Dialphone
+        source: /root/Dialphone
         target: /data/raw/Dialphone
         read_only: true
       - type: bind
-        source: ${CDR_RAW_HOST_PATH:-/srv/cdr/raw}/Vestacall
+        source: /root/Vestacall
         target: /data/raw/Vestacall
         read_only: true
       - cdr-runtime:/data/runtime
