@@ -133,8 +133,11 @@ def run_duckdb(sql, timeout=600):
 
 def build_csv_glob(entities, start_date, end_date, start_hour=None, end_hour=None):
     """
-    Build a list of CSV glob paths to scan for given entities + date range.
-    Dates are YYYY-MM-DD strings (inclusive). DuckDB read_csv_auto accepts a list.
+    Build a SQL-quoted list of existing CSV files for an entity/date range.
+
+    Resolving wildcards here is important: DuckDB rejects the entire input
+    list when even one daily wildcard matches no files. Live/partial days and
+    entities that legitimately have no traffic must not break the other files.
 
     If start_hour/end_hour given (both 0..23 inclusive, UTC), only files for
     those hours are included — 46labs writes hourly files bucketed by
@@ -158,7 +161,7 @@ def build_csv_glob(entities, start_date, end_date, start_hour=None, end_hour=Non
         except (TypeError, ValueError):
             hours = None
 
-    globs = []
+    files = []
     day = sd
     while day <= ed:
         for entity in entities:
@@ -168,12 +171,15 @@ def build_csv_glob(entities, start_date, end_date, start_hour=None, end_hour=Non
                 CDR_ROOT, entity, day.year, day.month, day.day,
             )
             if hours is None:
-                globs.append("'{}/*.csv.gz'".format(base))
+                patterns = ["{}/*.csv.gz".format(base)]
             else:
-                for h in hours:
-                    globs.append("'{}/{:02d}.csv.gz'".format(base, h))
+                patterns = ["{}/{:02d}.csv.gz".format(base, h) for h in hours]
+            for pattern in patterns:
+                for path in sorted(glob.glob(pattern)):
+                    safe_path = os.path.abspath(path).replace('\\', '/').replace("'", "''")
+                    files.append("'{}'".format(safe_path))
         day += timedelta(days=1)
-    return globs
+    return files
 
 
 def validate_body(body):
@@ -1015,7 +1021,7 @@ def build_customer_codes_export_sql(parsed, use_db):
             parsed['entities'], parsed['start_date'], parsed['end_date'],
             parsed['start_hour'], parsed['end_hour'],
         )
-        if not globs or not any(glob.glob(path[1:-1]) for path in globs):
+        if not globs:
             return None, 'no raw CDR files were found for the selected period'
         type_overrides = ', '.join(
             "'{}': '{}'".format(name, value)

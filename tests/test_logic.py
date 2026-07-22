@@ -83,6 +83,19 @@ class IngestionCoverageTests(unittest.TestCase):
                 self.assertFalse(api.all_entities_days_in_db(
                     ['MyCallConnect'], '2026-07-21', '2026-07-21'))
 
+    def test_raw_file_list_skips_empty_days_in_a_selected_range(self):
+        with tempfile.TemporaryDirectory() as root:
+            existing = Path(root, 'Dialphone', '2026', '07', '14', '03.csv.gz')
+            existing.parent.mkdir(parents=True)
+            existing.write_bytes(b'cdr')
+            with mock.patch.object(api, 'CDR_ROOT', root):
+                files = api.build_csv_glob(
+                    ['Dialphone'], '2026-07-14', '2026-07-15',
+                )
+            self.assertEqual(len(files), 1)
+            self.assertIn('2026/07/14/03.csv.gz', files[0])
+            self.assertNotIn('2026/07/15', files[0])
+
 
 class QueryLogicTests(unittest.TestCase):
     def test_global_sort_filter_and_full_customer_list_are_backend_driven(self):
