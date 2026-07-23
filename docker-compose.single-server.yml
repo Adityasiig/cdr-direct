@@ -49,6 +49,24 @@ services:
       retries: 3
     stop_grace_period: 30s
 
+  cdr-cache-warmer:
+    build:
+      context: .
+      args:
+        DUCKDB_VERSION: "1.5.4"
+    init: true
+    restart: unless-stopped
+    command: ["python", "cache_warmer.py", "--loop"]
+    environment:
+      CDR_AUTH_TOKEN: "${CDR_AUTH_TOKEN:?Set CDR_AUTH_TOKEN}"
+      CDR_API_URL: http://cdr-direct:8090
+      CDR_CACHE_WARM_INTERVAL: "${CDR_CACHE_WARM_INTERVAL:-900}"
+      CDR_CACHE_WARM_TIMEOUT: "${CDR_CACHE_WARM_TIMEOUT:-1800}"
+      CDR_CACHE_FINAL_REFRESH_UTC_HOUR: "${CDR_CACHE_FINAL_REFRESH_UTC_HOUR:-2}"
+    depends_on:
+      cdr-direct:
+        condition: service_healthy
+
 volumes:
   cdr-runtime:
   cdr-parquet:

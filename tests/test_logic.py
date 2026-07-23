@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from datetime import date, datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -52,6 +53,38 @@ class ValidationTests(unittest.TestCase):
         other = dict(base, sort_by='margin', sort_dir='asc', quick_filter='profitable')
         self.assertNotEqual(cache.make_key('usa-customer-codes', base),
                             cache.make_key('usa-customer-codes', other))
+
+    def test_daily_snapshot_rejects_a_result_computed_before_finalization(self):
+        snapshot_day = date(2026, 7, 22)
+        body = cache.daily_snapshot_body(snapshot_day)
+        key = cache.make_key('usa-customer-codes', body)
+        too_early = datetime(2026, 7, 23, 1, 0, tzinfo=timezone.utc).timestamp()
+        with mock.patch.object(cache.time, 'time', return_value=too_early):
+            cache.put(
+                key, 'usa-customer-codes', body, {'rows': []},
+                cache.classify_tier(body), compute_ms=123,
+            )
+
+        prepared = cache.latest_daily_snapshot(
+            today=date(2026, 7, 23), final_utc_hour=2,
+        )
+
+        self.assertIsNone(prepared)
+
+    def test_latest_daily_snapshot_returns_prepared_full_day(self):
+        snapshot_day = date(2026, 7, 22)
+        body = cache.daily_snapshot_body(snapshot_day)
+        response = {'rows': [{'code': '212555'}], 'totals': {'attempts': 1}}
+        key = cache.make_key('usa-customer-codes', body)
+        cache.put(
+            key, 'usa-customer-codes', body, response,
+            cache.classify_tier(body), compute_ms=123,
+        )
+
+        prepared = cache.latest_daily_snapshot(today=date(2026, 7, 23))
+
+        self.assertEqual(prepared['snapshot_date'], '2026-07-22')
+        self.assertEqual(prepared['response'], response)
 
     def test_origin_trunk_is_the_filter_dimension(self):
         where = api.build_where([], "MCC-TRUNK-A")
@@ -213,6 +246,34 @@ class SecurityAndUiTests(unittest.TestCase):
         self.assertIn('class="chip active" data-sip="all"', html)
         self.assertIn("selectedSips: new Set(['all'])", js)
         self.assertNotIn('localCacheGetAny', js)
+        self.assertIn("fetch('/api/daily-snapshot'", js)
+
+    def test_daily_snapshot_endpoint_never_computes(self):
+        old_token = api.AUTH_TOKEN
+        cached = {
+            'response': {'rows': [{'code': '212555'}], 'totals': {}},
+            'snapshot_date': '2026-07-22',
+            'refreshed_at': 1.0,
+            'age_seconds': 2.0,
+            'tier': 'yesterday',
+            'ttl': 900,
+            'stale': False,
+            'compute_ms': 123,
+        }
+        try:
+            api.AUTH_TOKEN = 'test-token'
+            client = api.app.test_client()
+            with mock.patch.object(cache, 'latest_daily_snapshot', return_value=cached):
+                response = client.get(
+                    '/api/daily-snapshot',
+                    headers={'X-Auth-Token': 'test-token'},
+                )
+            self.assertEqual(response.status_code, 200)
+            payload = response.get_json()
+            self.assertEqual(payload['_snapshot']['date'], '2026-07-22')
+            self.assertEqual(payload['rows'][0]['code'], '212555')
+        finally:
+            api.AUTH_TOKEN = old_token
 
 
 if __name__ == '__main__':

@@ -946,6 +946,36 @@ def api_cache_stats():
     return jsonify(cache.stats())
 
 
+@app.route('/api/daily-snapshot', methods=['GET'])
+def api_daily_snapshot():
+    """Return prepared data only; never make the browser wait on DuckDB."""
+    if not check_auth():
+        return jsonify({'error': 'unauthorized'}), 401
+    cached = cache.latest_daily_snapshot()
+    if not cached:
+        return jsonify({
+            'ready': False,
+            'error': 'daily snapshot is still being prepared',
+        }), 404
+
+    response = dict(cached['response'])
+    response['_snapshot'] = {
+        'ready': True,
+        'date': cached['snapshot_date'],
+        'complete_day': True,
+    }
+    response['_cache'] = {
+        'hit': True,
+        'refreshed_at': cached['refreshed_at'],
+        'age_seconds': int(cached['age_seconds']),
+        'tier': cached['tier'],
+        'ttl': cached['ttl'],
+        'stale': cached['stale'],
+        'compute_ms': cached['compute_ms'],
+    }
+    return jsonify(response)
+
+
 @app.route('/api/db-stats', methods=['GET'])
 def api_db_stats():
     if not check_auth():

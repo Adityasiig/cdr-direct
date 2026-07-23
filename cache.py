@@ -8,11 +8,20 @@ import sqlite3
 import json
 import time
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from settings import CACHE_DB, MAX_RESULT_ROWS
 
 CACHE_KEY_VERSION = 2  # v2 switches the dashboard dimension to origin trunk.
+DAILY_SNAPSHOT_ENTITIES = (
+    'MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall',
+)
+try:
+    DAILY_SNAPSHOT_FINAL_UTC_HOUR = max(
+        0, min(23, int(os.environ.get('CDR_CACHE_FINAL_REFRESH_UTC_HOUR', '2'))),
+    )
+except ValueError:
+    DAILY_SNAPSHOT_FINAL_UTC_HOUR = 2
 
 # Tier → TTL in seconds. Tier classification by date-class of the query.
 TIER_TTLS = {
@@ -151,6 +160,54 @@ def put(cache_key, endpoint, body, response, tier, compute_ms=0):
         conn.commit()
     finally:
         conn.close()
+
+
+def daily_snapshot_body(day):
+    """Canonical request used by both the browser and daily cache warmer."""
+    day_str = day.isoformat() if hasattr(day, 'isoformat') else str(day)
+    return {
+        'start_date': day_str,
+        'end_date': day_str,
+        'entities': list(DAILY_SNAPSHOT_ENTITIES),
+        'sip_codes': [],
+        'customer': None,
+        'limit': MAX_RESULT_ROWS,
+        'sort_by': 'revenue',
+        'sort_dir': 'desc',
+        'quick_filter': None,
+    }
+
+
+def latest_daily_snapshot(
+        endpoint='usa-customer-codes', lookback_days=7, today=None,
+        final_utc_hour=None):
+    """
+    Return the newest prepared full-day dashboard response without computing.
+
+    Yesterday is preferred. Falling back through the previous week means a
+    browser still receives a complete day immediately while the next snapshot
+    is being prepared.
+    """
+    if today is None:
+        today = datetime.now(timezone.utc).date()
+    if final_utc_hour is None:
+        final_utc_hour = DAILY_SNAPSHOT_FINAL_UTC_HOUR
+    for days_back in range(1, max(1, int(lookback_days)) + 1):
+        snapshot_date = today - timedelta(days=days_back)
+        body = daily_snapshot_body(snapshot_date)
+        cached = get(make_key(endpoint, body))
+        next_day = snapshot_date + timedelta(days=1)
+        finalized_after = datetime(
+            next_day.year, next_day.month, next_day.day,
+            int(final_utc_hour), tzinfo=timezone.utc,
+        ).timestamp()
+        # A result computed while hourly files were still arriving is not a
+        # complete-day snapshot. Keep showing the previous completed day until
+        # the post-ingestion refresh has finished.
+        if cached and cached['refreshed_at'] >= finalized_after:
+            cached['snapshot_date'] = snapshot_date.isoformat()
+            return cached
+    return None
 
 
 def drop_older_than(cutoff_date_str):

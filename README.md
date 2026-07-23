@@ -182,6 +182,13 @@ happen on the 256 GB raw CDR server.
 `docker-compose.single-server.yml` preserves the older all-in-one deployment
 for installations where Coolify and the raw files are on the same machine.
 
+That single-server Compose file also starts `cdr-cache-warmer`. It prepares the
+latest completed UTC day in the persistent SQLite cache every day. Before
+02:00 UTC the dashboard keeps serving the previous completed day; after 02:00
+UTC it refreshes yesterday once, then new browser sessions load that prepared
+snapshot without scanning raw gzip files. The first deployment has one initial
+40-90 second preparation; later page opens use the prepared result.
+
 Cached requests should be fast, but an uncached query grouping hundreds of
 millions of rows can still take minutes. Hourly/daily aggregate tables are the
 next optimization if cold queries must consistently be interactive.

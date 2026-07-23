@@ -557,6 +557,53 @@
     throw lastErr || new Error('unknown error');
   }
 
+  async function loadDailySnapshot() {
+    const started = performance.now();
+    const res = await fetch('/api/daily-snapshot', {
+      method: 'GET',
+      headers: apiHeaders(),
+    });
+    if (res.status === 404) return false;
+    if (res.status === 401) {
+      if (!PROXY_AUTH) {
+        state.token = '';
+        localStorage.removeItem('cdr_direct_token');
+        ensureToken();
+      }
+      throw new Error('401 — token rejected');
+    }
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.error || ('HTTP ' + res.status));
+
+    const snapshot = payload._snapshot || {};
+    if (snapshot.date) {
+      el.startDate.value = snapshot.date;
+      el.endDate.value = snapshot.date;
+      el.datePill.textContent = snapshot.date;
+    }
+    state.rawRows = payload.rows || [];
+    state.customerNames = payload.customers ||
+      (payload.totals && payload.totals.customers) || [];
+    state.totalRowCount = payload.total_row_count || state.rawRows.length;
+    renderStats(payload.totals || {});
+    applyFilter();
+    rebuildCustomerDropdownFromRows();
+    state.lastCacheMeta = payload._cache || null;
+    renderCachePill();
+
+    const body = getQueryBody();
+    body._endpoint = '/api/usa-customer-codes';
+    localCachePut(body, payload);
+    const elapsed = Math.round(performance.now() - started);
+    setStatus(
+      'Ready — full day ' + (snapshot.date || '') +
+      ' loaded from the prepared snapshot in ' + elapsed + 'ms · ' +
+      state.rawRows.length.toLocaleString() + ' rows shown',
+      'success'
+    );
+    return true;
+  }
+
   function getQueryBody() {
     const sipList = state.selectedSips.has('all')
       ? []
@@ -1033,8 +1080,23 @@
   renderCachePill();
   startCachePillTicker();
   if (PROXY_AUTH || state.token) {
-    // First query — if cache is warm, returns in <200ms; otherwise DuckDB cold path.
-    setStatus('Loading yesterday\'s data — cache hit returns <200ms, miss runs DuckDB ~40-60s…', 'loading');
-    runQuery();
+    setStatus('Opening the latest prepared full-day snapshot…', 'loading');
+    loadDailySnapshot()
+      .then((loaded) => {
+        if (!loaded) {
+          setStatus(
+            'Preparing the first daily snapshot — this one-time scan can take 40–90s…',
+            'loading'
+          );
+          runQuery();
+        }
+      })
+      .catch((e) => {
+        setStatus(
+          'Snapshot unavailable (' + e.message + ') — loading through the normal cache…',
+          'loading'
+        );
+        runQuery();
+      });
   }
 })();

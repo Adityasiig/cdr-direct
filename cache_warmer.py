@@ -1,78 +1,76 @@
 #!/usr/bin/env python3
 """
-CDR Direct cache warmer.
+Prepare yesterday's complete dashboard result before a browser requests it.
 
-Pre-computes and caches the most-frequently-hit filter combos so first
-browser open of the day is instant (< 200ms) instead of 20-60 sec cold.
-
-Run order (parallel not needed — API worker is single, sequential is fine):
-  1. Yesterday × 4 entities             (highest-EV — main daily-review view)
-  2. Today × 4 entities                 (partial-day live view)
-  3. Yesterday × per-entity (4 variants)
-  4. Last 3 days × 4 entities           (weekly rollup start)
-
-Runs against 127.0.0.1:8090 so it doesn't need external network.
-Auth token read from /etc/cdr-direct-token (same as API).
-
-Exit code:
-  0 on full success
-  1 on any warm failure (but continues through the queue — best-effort)
+In Docker Compose this runs as a small sidecar and calls the API over the
+private Compose network. The API owns the persistent SQLite result cache.
 """
 
 import json
+import os
 import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
-API_URL_BASE = 'http://127.0.0.1:8090'
-TOKEN_FILE = '/etc/cdr-direct-token'
-ENDPOINTS = (
-    '/api/usa-customer-codes',
-    '/api/usa-codes',
-)
-ENTITIES_ALL = ('MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall')
-PER_ENTITY = tuple((e,) for e in ENTITIES_ALL)
 
-# Per-request timeout — long enough for 4-entity full day cold (~25s post-fix)
-# but not silly-long. If cold-compute exceeds this the warm just fails, next
-# real user query will still work.
-TIMEOUT_SEC = 90
+API_URL_BASE = os.environ.get(
+    'CDR_API_URL', 'http://127.0.0.1:8090',
+).rstrip('/')
+TOKEN_FILE = '/etc/cdr-direct-token'
+ENDPOINT = '/api/usa-customer-codes'
+ENTITIES_ALL = ('MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall')
+TIMEOUT_SEC = int(os.environ.get('CDR_CACHE_WARM_TIMEOUT', '1800'))
+LOOP_INTERVAL_SEC = max(
+    60, int(os.environ.get('CDR_CACHE_WARM_INTERVAL', '900')),
+)
+FINAL_REFRESH_UTC_HOUR = int(
+    os.environ.get('CDR_CACHE_FINAL_REFRESH_UTC_HOUR', '2'),
+)
 
 
 def read_token():
+    token = os.environ.get('CDR_AUTH_TOKEN', '').strip()
+    if token:
+        return token
     try:
-        with open(TOKEN_FILE) as f:
-            return f.read().strip()
+        with open(TOKEN_FILE, encoding='utf-8') as token_file:
+            return token_file.read().strip()
     except OSError:
         return ''
 
 
 def log(*args):
-    ts = time.strftime('%Y-%m-%d %H:%M:%S')
-    print(ts, '[cache-warmer]', *args, flush=True)
+    stamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    print(stamp, '[cache-warmer]', *args, flush=True)
 
 
 def utc_today():
     return datetime.now(timezone.utc).date()
 
 
-def warm_one(token, endpoint, entities, start_date, end_date, label):
+def build_body(day, force=False):
+    """Match static/app.js getQueryBody() exactly for its initial view."""
     body = {
-        'entities': list(entities),
-        'start_date': start_date,
-        'end_date': end_date,
-        # Empty means all outcomes so ASR uses failures in its denominator.
+        'start_date': day,
+        'end_date': day,
+        'entities': list(ENTITIES_ALL),
         'sip_codes': [],
-        'customer': '',
-        'start_hour': 0,
-        'end_hour': 23,
+        'customer': None,
+        'limit': 5000,
         'sort_by': 'revenue',
         'sort_dir': 'desc',
+        'quick_filter': None,
     }
-    payload = json.dumps(body).encode('utf-8')
-    req = urllib.request.Request(
-        API_URL_BASE + endpoint,
+    if force:
+        body['force_refresh'] = True
+    return body
+
+
+def warm_one(token, day, force=False):
+    payload = json.dumps(build_body(day, force=force)).encode('utf-8')
+    request = urllib.request.Request(
+        API_URL_BASE + ENDPOINT,
         data=payload,
         headers={
             'Content-Type': 'application/json',
@@ -80,78 +78,64 @@ def warm_one(token, endpoint, entities, start_date, end_date, label):
         },
         method='POST',
     )
-    t0 = time.time()
+    started = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as resp:
-            data = resp.read()
-            dt = time.time() - t0
-            cached = 'unknown'
-            try:
-                j = json.loads(data)
-                c = j.get('_cache') or {}
-                cached = 'hit' if c.get('hit') else 'miss'
-                pair = j.get('totals', {}).get('pair_count') or j.get('totals', {}).get('code_count', 0)
-                log('OK  [{}s] {} {} → {} bytes, cache={}, groups={}'.format(
-                    round(dt, 1), endpoint, label, len(data), cached, pair,
-                ))
-            except Exception:
-                log('OK  [{}s] {} {} → {} bytes (unparsable body)'.format(
-                    round(dt, 1), endpoint, label, len(data),
-                ))
-            return True
+        with urllib.request.urlopen(request, timeout=TIMEOUT_SEC) as response:
+            data = response.read()
+        elapsed = time.time() - started
+        parsed = json.loads(data)
+        cache_meta = parsed.get('_cache') or {}
+        cache_state = 'hit' if cache_meta.get('hit') else 'computed'
+        group_count = (
+            parsed.get('totals', {}).get('pair_count')
+            or parsed.get('totals', {}).get('code_count', 0)
+        )
+        log(
+            'ready day={} elapsed={:.1f}s cache={} groups={} force={}'.format(
+                day, elapsed, cache_state, group_count, force,
+            )
+        )
+        return True
     except Exception as exc:
-        dt = time.time() - t0
-        log('ERR [{}s] {} {} → {}'.format(round(dt, 1), endpoint, label, exc))
+        elapsed = time.time() - started
+        log('failed day={} elapsed={:.1f}s error={}'.format(day, elapsed, exc))
         return False
+
+
+def warm_yesterday(token, force=False):
+    yesterday = (utc_today() - timedelta(days=1)).isoformat()
+    return warm_one(token, yesterday, force=force)
+
+
+def run_loop(token):
+    last_final_refresh_day = None
+    while True:
+        now = datetime.now(timezone.utc)
+        after_finalization = now.hour >= FINAL_REFRESH_UTC_HOUR
+        days_back = 1 if after_finalization else 2
+        snapshot_day = (now.date() - timedelta(days=days_back)).isoformat()
+        force = after_finalization and last_final_refresh_day != snapshot_day
+        ok = warm_one(token, snapshot_day, force=force)
+        if force and ok:
+            last_final_refresh_day = snapshot_day
+        time.sleep(LOOP_INTERVAL_SEC)
 
 
 def main():
     token = read_token()
     if not token:
-        log('FATAL: could not read', TOKEN_FILE)
+        log('fatal: set CDR_AUTH_TOKEN or provide {}'.format(TOKEN_FILE))
         return 2
 
-    today = utc_today()
-    yesterday = today - timedelta(days=1)
-    three_days_ago = today - timedelta(days=2)
-
-    Y = yesterday.isoformat()
-    T = today.isoformat()
-    L3_start = three_days_ago.isoformat()
-
-    combos = []
-
-    # Priority 1: Yesterday × 4 entities — the #1 daily-review view
-    for ep in ENDPOINTS:
-        combos.append((ep, ENTITIES_ALL, Y, Y, 'Yesterday × 4ent'))
-
-    # Priority 2: Today × 4 entities — live view during work hours
-    for ep in ENDPOINTS:
-        combos.append((ep, ENTITIES_ALL, T, T, 'Today × 4ent'))
-
-    # Priority 3: Yesterday × per-entity — entity drill-down
-    for ep in ENDPOINTS:
-        for e in ENTITIES_ALL:
-            combos.append((ep, (e,), Y, Y, 'Yesterday × {}'.format(e)))
-
-    # Priority 4: Last 3 days × 4 entities — trailing view
-    for ep in ENDPOINTS:
-        combos.append((ep, ENTITIES_ALL, L3_start, T, 'Last 3d × 4ent'))
-
-    log('=== cache warmer start === {} combos queued'.format(len(combos)))
-    t_start = time.time()
-    ok = err = 0
-    for ep, ents, sd, ed, label in combos:
-        if warm_one(token, ep, ents, sd, ed, label):
-            ok += 1
-        else:
-            err += 1
-
-    elapsed = time.time() - t_start
-    log('=== cache warmer done === ok={} err={} in {:.1f}s ({:.1f}min)'.format(
-        ok, err, elapsed, elapsed / 60,
-    ))
-    return 0 if err == 0 else 1
+    if '--loop' in sys.argv:
+        log(
+            'loop started API={} interval={}s final_refresh={:02d}:00UTC'.format(
+                API_URL_BASE, LOOP_INTERVAL_SEC, FINAL_REFRESH_UTC_HOUR,
+            )
+        )
+        run_loop(token)
+        return 0
+    return 0 if warm_yesterday(token) else 1
 
 
 if __name__ == '__main__':

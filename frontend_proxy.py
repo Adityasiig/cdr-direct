@@ -39,6 +39,7 @@ ALLOWED_API_ROUTES = {
     ('POST', '/api/stir-x5u/csv'),
     ('POST', '/api/customers'),
     ('GET', '/api/cache-stats'),
+    ('GET', '/api/daily-snapshot'),
     ('GET', '/api/db-stats'),
 }
 
