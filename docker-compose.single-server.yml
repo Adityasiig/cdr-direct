@@ -21,19 +21,19 @@ services:
     volumes:
       - type: bind
         source: /root/MyCallConnect
-        target: /var/lib/clickhouse/user_files/cdr/MyCallConnect
+        target: /cdr-source/cdr/MyCallConnect
         read_only: true
       - type: bind
         source: /root/SalamTalk
-        target: /var/lib/clickhouse/user_files/cdr/SalamTalk
+        target: /cdr-source/cdr/SalamTalk
         read_only: true
       - type: bind
         source: /root/Dialphone
-        target: /var/lib/clickhouse/user_files/cdr/Dialphone
+        target: /cdr-source/cdr/Dialphone
         read_only: true
       - type: bind
         source: /root/Vestacall
-        target: /var/lib/clickhouse/user_files/cdr/Vestacall
+        target: /cdr-source/cdr/Vestacall
         read_only: true
       - clickhouse-data:/var/lib/clickhouse
       - clickhouse-logs:/var/log/clickhouse-server

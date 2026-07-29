@@ -1,0 +1,7 @@
+<clickhouse>
+    <!-- Keep the very large read-only CDR tree outside ClickHouse's data
+         directory. The image entrypoint owns/chowns /var/lib/clickhouse
+         before startup; nesting the raw mounts there can delay startup for
+         hours and attempt to traverse every source file. -->
+    <user_files_path>/cdr-source/</user_files_path>
+</clickhouse>
