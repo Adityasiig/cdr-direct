@@ -8,11 +8,9 @@
             <max_concurrent_queries_for_user>12</max_concurrent_queries_for_user>
             <constraints>
                 <!-- Grafana's ClickHouse plugin applies this setting to each
-                     query. Permit only this bounded setting to change while
+                     query. Permit only this setting to change while
                      keeping the user fully read-only for data operations. -->
                 <max_execution_time>
-                    <min>1</min>
-                    <max>120</max>
                     <changeable_in_readonly/>
                 </max_execution_time>
             </constraints>
