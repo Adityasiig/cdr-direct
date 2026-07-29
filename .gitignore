@@ -24,3 +24,7 @@ venv/
 *.bak-*
 *.pre-*
 _bak_*/
+
+# Local data and separate nested repository (do not include in cdr-direct)
+DP and ED customers 13 - 14.csv
+routeforge-lcr2/

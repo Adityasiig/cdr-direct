@@ -284,6 +284,23 @@ class ProvisioningTests(unittest.TestCase):
         for panel in route_panels:
             panel_sql = panel['targets'][0]['rawSql']
             self.assertIn('$origin_trunk', panel_sql, panel['title'])
+        for panel_id in (3, 4, 5, 6):
+            panel = next(
+                panel for panel in dashboard['panels']
+                if panel['id'] == panel_id
+            )
+            self.assertIn(
+                "term_media_ip != '(none)'",
+                panel['targets'][0]['rawSql'],
+                panel['title'],
+            )
+        raw_cdr_panel = next(
+            panel for panel in dashboard['panels'] if panel['id'] == 7
+        )
+        self.assertIn(
+            'notEmpty(term_media_ip)',
+            raw_cdr_panel['targets'][0]['rawSql'],
+        )
 
     def test_compose_passes_the_termination_media_ip_watchlist(self):
         compose = Path('docker-compose.single-server.yml').read_text(
