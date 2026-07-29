@@ -21,7 +21,10 @@ datasources:
       defaultTable: cdr_hourly_media_ip
       queryTimeout: 120
       dialTimeout: 10
-      enableRowLimit: true
+      # Dashboard table queries already have explicit SQL LIMIT clauses.
+      # Enabling this makes the plugin modify ClickHouse's `limit` setting,
+      # which a safely configured readonly=1 user must reject.
+      enableRowLimit: false
       validateSql: true
     secureJsonData:
       password: $CLICKHOUSE_GRAFANA_PASSWORD
