@@ -16,7 +16,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 0, "y": 0},
       "id": 1,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT sum(attempts) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT sum(attempts) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Attempts",
       "type": "stat"
     },
@@ -26,7 +26,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 3, "y": 0},
       "id": 2,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT sum(completions) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT sum(completions) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Completions",
       "type": "stat"
     },
@@ -36,7 +36,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0},
       "id": 3,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "ASR",
       "type": "stat"
     },
@@ -46,7 +46,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0},
       "id": 4,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(billed_seconds) / 60.0, 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(billed_seconds) / 60.0, 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Minutes",
       "type": "stat"
     },
@@ -56,7 +56,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 12, "y": 0},
       "id": 5,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(revenue), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(revenue), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Revenue",
       "type": "stat"
     },
@@ -66,7 +66,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 15, "y": 0},
       "id": 6,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(cost), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(cost), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Cost",
       "type": "stat"
     },
@@ -76,7 +76,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 18, "y": 0},
       "id": 7,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(revenue) - sum(cost), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT round(sum(revenue) - sum(cost), 2) AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote})", "refId": "A"}],
       "title": "Margin",
       "type": "stat"
     },
@@ -86,7 +86,7 @@
       "gridPos": {"h": 4, "w": 3, "x": 21, "y": 0},
       "id": 8,
       "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT uniqExactIf(term_media_ip, term_media_ip != '(none)') AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring})", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT uniqExactIf(term_media_ip, term_media_ip != '(none)') AS value FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote})", "refId": "A"}],
       "title": "Active Media IPs",
       "type": "stat"
     },
@@ -96,7 +96,7 @@
       "gridPos": {"h": 8, "w": 16, "x": 0, "y": 4},
       "id": 9,
       "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
-      "targets": [{"editorType": "sql", "format": 0, "queryType": "sql", "rawSql": "SELECT hour AS time, sum(attempts) AS Attempts, sum(completions) AS Completions FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring}) GROUP BY hour ORDER BY hour", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 0, "queryType": "sql", "rawSql": "SELECT hour AS time, sum(attempts) AS Attempts, sum(completions) AS Completions FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote}) GROUP BY hour ORDER BY hour", "refId": "A"}],
       "title": "Traffic by Hour",
       "type": "timeseries"
     },
@@ -106,7 +106,7 @@
       "gridPos": {"h": 8, "w": 8, "x": 16, "y": 4},
       "id": 10,
       "options": {"displayMode": "gradient", "minVizHeight": 10, "minVizWidth": 0, "orientation": "horizontal", "reduceOptions": {"calcs": ["sum"], "fields": "", "values": false}, "showUnfilled": true, "valueMode": "color"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip, sum(attempts) AS attempts FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) GROUP BY term_media_ip ORDER BY attempts DESC LIMIT 15", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip, sum(attempts) AS attempts FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) GROUP BY term_media_ip ORDER BY attempts DESC LIMIT 15", "refId": "A"}],
       "title": "Top Term Media IPs",
       "type": "bargauge"
     },
@@ -116,7 +116,7 @@
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 12},
       "id": 11,
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Attempts"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, any(term_ip) AS `Signaling IP`, arrayStringConcat(groupUniqArray(5)(term_carrier_name), ', ') AS Vendors, arrayStringConcat(groupUniqArray(5)(term_trunk_group_name), ', ') AS Trunks, sum(attempts) AS Attempts, sum(completions) AS Completions, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `ASR %`, round(sum(billed_seconds) / 60.0, 2) AS Minutes, round(sum(revenue), 2) AS Revenue, round(sum(cost), 2) AS Cost, round(sum(revenue) - sum(cost), 2) AS Margin, round(sum(mos_sum) / nullIf(sum(mos_count), 0), 2) AS `Avg MOS`, round(sum(pdd_sum) / nullIf(sum(pdd_count), 0), 1) AS `Avg PDD` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring}) GROUP BY term_media_ip ORDER BY Attempts DESC LIMIT 500", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, any(term_ip) AS `Signaling IP`, arrayStringConcat(groupUniqArray(5)(term_carrier_name), ', ') AS Vendors, arrayStringConcat(groupUniqArray(5)(term_trunk_group_name), ', ') AS Trunks, sum(attempts) AS Attempts, sum(completions) AS Completions, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `ASR %`, round(sum(billed_seconds) / 60.0, 2) AS Minutes, round(sum(revenue), 2) AS Revenue, round(sum(cost), 2) AS Cost, round(sum(revenue) - sum(cost), 2) AS Margin, round(sum(mos_sum) / nullIf(sum(mos_count), 0), 2) AS `Avg MOS`, round(sum(pdd_sum) / nullIf(sum(pdd_count), 0), 1) AS `Avg PDD` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote}) GROUP BY term_media_ip ORDER BY Attempts DESC LIMIT 500", "refId": "A"}],
       "title": "Term Media IP Performance",
       "type": "table"
     },
@@ -126,7 +126,7 @@
       "gridPos": {"h": 9, "w": 12, "x": 0, "y": 22},
       "id": 12,
       "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, sip_code AS `SIP Code`, reason AS `Release Cause`, sum(attempts) AS Attempts FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND sip_code != 200 AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring}) GROUP BY term_media_ip, sip_code, reason ORDER BY Attempts DESC LIMIT 250", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, sip_code AS `SIP Code`, reason AS `Release Cause`, sum(attempts) AS Attempts FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND sip_code != 200 AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote}) GROUP BY term_media_ip, sip_code, reason ORDER BY Attempts DESC LIMIT 250", "refId": "A"}],
       "title": "Failures by Media IP and Release Cause",
       "type": "table"
     },
@@ -136,7 +136,7 @@
       "gridPos": {"h": 9, "w": 12, "x": 12, "y": 22},
       "id": 13,
       "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, orig_trunk_group_name AS `Origin Trunk`, sum(attempts) AS Attempts, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `ASR %`, round(sum(revenue) - sum(cost), 2) AS Margin FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${media_ip:sqlstring} = 'All' OR term_media_ip = ${media_ip:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring}) GROUP BY term_media_ip, orig_trunk_group_name ORDER BY Attempts DESC LIMIT 250", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Term Media IP`, orig_trunk_group_name AS `Origin Trunk`, sum(attempts) AS Attempts, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `ASR %`, round(sum(revenue) - sum(cost), 2) AS Margin FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${media_ip:singlequote} = 'All' OR term_media_ip = ${media_ip:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote}) GROUP BY term_media_ip, orig_trunk_group_name ORDER BY Attempts DESC LIMIT 250", "refId": "A"}],
       "title": "Origin Trunk to Media IP",
       "type": "table"
     },
@@ -146,7 +146,7 @@
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 31},
       "id": 14,
       "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT event_time AS Time, entity AS Entity, term_media_ip AS `Term Media IP`, term_ip AS `Term Signaling IP`, term_carrier_name AS Vendor, term_trunk_group_name AS `Term Trunk`, orig_trunk_group_name AS `Origin Trunk`, from_did AS ANI, to_did AS DNIS, sip_code AS `SIP Code`, reason AS `Release Cause`, duration_real AS `Duration Sec`, round(orig_cost, 6) AS Revenue, round(term_cost, 6) AS Cost, stir_attest AS Attest, round(mos_avg, 2) AS MOS, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND ${media_ip:sqlstring} != 'All' AND term_media_ip = ${media_ip:sqlstring} AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) AND (${trunk:sqlstring} = 'All' OR term_trunk_group_name = ${trunk:sqlstring}) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT event_time AS Time, entity AS Entity, term_media_ip AS `Term Media IP`, term_ip AS `Term Signaling IP`, term_carrier_name AS Vendor, term_trunk_group_name AS `Term Trunk`, orig_trunk_group_name AS `Origin Trunk`, from_did AS ANI, to_did AS DNIS, sip_code AS `SIP Code`, reason AS `Release Cause`, duration_real AS `Duration Sec`, round(orig_cost, 6) AS Revenue, round(term_cost, 6) AS Cost, stir_attest AS Attest, round(mos_avg, 2) AS MOS, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND ${media_ip:singlequote} != 'All' AND term_media_ip = ${media_ip:singlequote} AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) AND (${trunk:singlequote} = 'All' OR term_trunk_group_name = ${trunk:singlequote}) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
       "title": "Raw CDR Drill-down — select one Term Media IP (latest 1,000)",
       "type": "table"
     },
@@ -184,13 +184,13 @@
         "allValue": "All",
         "current": {"selected": true, "text": "All", "value": "All"},
         "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
-        "definition": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) ORDER BY term_media_ip",
+        "definition": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) ORDER BY term_media_ip",
         "includeAll": true,
         "label": "Term Media IP",
         "multi": false,
         "name": "media_ip",
         "options": [],
-        "query": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:sqlstring} = 'All' OR entity = ${entity:sqlstring}) ORDER BY term_media_ip",
+        "query": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND (${entity:singlequote} = 'All' OR entity = ${entity:singlequote}) ORDER BY term_media_ip",
         "refresh": 2,
         "type": "query"
       },
@@ -212,13 +212,13 @@
         "allValue": "All",
         "current": {"selected": true, "text": "All", "value": "All"},
         "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
-        "definition": "SELECT DISTINCT term_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_trunk_group_name != '(none)' AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) ORDER BY term_trunk_group_name",
+        "definition": "SELECT DISTINCT term_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_trunk_group_name != '(none)' AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) ORDER BY term_trunk_group_name",
         "includeAll": true,
         "label": "Term Trunk",
         "multi": false,
         "name": "trunk",
         "options": [],
-        "query": "SELECT DISTINCT term_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_trunk_group_name != '(none)' AND (${vendor:sqlstring} = 'All' OR term_carrier_name = ${vendor:sqlstring}) ORDER BY term_trunk_group_name",
+        "query": "SELECT DISTINCT term_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_trunk_group_name != '(none)' AND (${vendor:singlequote} = 'All' OR term_carrier_name = ${vendor:singlequote}) ORDER BY term_trunk_group_name",
         "refresh": 2,
         "type": "query"
       }
