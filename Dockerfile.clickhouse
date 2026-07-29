@@ -1,0 +1,4 @@
+FROM clickhouse/clickhouse-server:26.3
+
+COPY clickhouse/init/ /docker-entrypoint-initdb.d/
+COPY clickhouse/users.d/ /etc/clickhouse-server/users.d/

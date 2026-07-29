@@ -195,3 +195,11 @@ next optimization if cold queries must consistently be interactive.
 
 Real billing data, database files, caches, Parquet files, secrets, and local
 virtual environments are excluded by `.gitignore`.
+
+## ClickHouse and Grafana
+
+The single-server stack can now ingest stable hourly 46Labs gzip files into
+ClickHouse and provision Grafana with a Term Media IP dashboard. The existing
+DuckDB dashboard stays online during rollout. See
+[`CLICKHOUSE_GRAFANA.md`](CLICKHOUSE_GRAFANA.md) for deployment, initial
+backfill, generated passwords, and ingestion-safety behavior.

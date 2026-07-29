@@ -1,0 +1,10 @@
+FROM grafana/grafana:12.4.0
+
+USER root
+RUN grafana cli plugins install grafana-clickhouse-datasource 4.15.0
+
+COPY grafana/provisioning/ /etc/grafana/provisioning/
+COPY grafana/dashboards/ /var/lib/grafana/dashboards/
+
+RUN chown -R 472:0 /etc/grafana/provisioning /var/lib/grafana/dashboards
+USER 472

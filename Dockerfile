@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY api.py cache.py db.py settings.py ./
 COPY static ./static
 COPY templates ./templates
-COPY backfill.py nightly_append.py build_parquet.py cache_warmer.py refresh_cache.py ./
+COPY backfill.py nightly_append.py build_parquet.py cache_warmer.py refresh_cache.py clickhouse_ingester.py ./
 
 RUN mkdir -p /data/raw /data/runtime /data/parquet
 

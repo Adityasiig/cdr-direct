@@ -1,4 +1,51 @@
 services:
+  clickhouse:
+    build:
+      context: .
+      dockerfile: Dockerfile.clickhouse
+    init: true
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: cdr
+      CLICKHOUSE_USER: cdr_admin
+      CLICKHOUSE_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEADMIN:?Coolify generates this ClickHouse admin password}"
+      CLICKHOUSE_GRAFANA_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEGRAFANA:?Coolify generates this Grafana datasource password}"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      CLICKHOUSE_RUN_AS_ROOT: "1"
+    expose:
+      - "8123"
+      - "9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - type: bind
+        source: /root/MyCallConnect
+        target: /var/lib/clickhouse/user_files/cdr/MyCallConnect
+        read_only: true
+      - type: bind
+        source: /root/SalamTalk
+        target: /var/lib/clickhouse/user_files/cdr/SalamTalk
+        read_only: true
+      - type: bind
+        source: /root/Dialphone
+        target: /var/lib/clickhouse/user_files/cdr/Dialphone
+        read_only: true
+      - type: bind
+        source: /root/Vestacall
+        target: /var/lib/clickhouse/user_files/cdr/Vestacall
+        read_only: true
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-logs:/var/log/clickhouse-server
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user \"$${CLICKHOUSE_USER}\" --password \"$${CLICKHOUSE_PASSWORD}\" --query 'SELECT 1'"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    stop_grace_period: 60s
+
   cdr-direct:
     build:
       context: .
@@ -49,6 +96,45 @@ services:
       retries: 3
     stop_grace_period: 30s
 
+  cdr-clickhouse-ingester:
+    build:
+      context: .
+      args:
+        DUCKDB_VERSION: "1.5.4"
+    init: true
+    restart: unless-stopped
+    command: ["python", "clickhouse_ingester.py", "--loop"]
+    environment:
+      CDR_ROOT: /data/raw
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: cdr
+      CLICKHOUSE_USER: cdr_admin
+      CLICKHOUSE_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEADMIN:?Coolify generates this ClickHouse admin password}"
+      CDR_INGEST_LOOKBACK_DAYS: "${CDR_INGEST_LOOKBACK_DAYS:-2}"
+      CDR_INGEST_MIN_AGE_SECONDS: "${CDR_INGEST_MIN_AGE_SECONDS:-600}"
+      CDR_INGEST_INTERVAL_SECONDS: "${CDR_INGEST_INTERVAL_SECONDS:-60}"
+      CDR_INGEST_QUERY_TIMEOUT: "${CDR_INGEST_QUERY_TIMEOUT:-1800}"
+    volumes:
+      - type: bind
+        source: /root/MyCallConnect
+        target: /data/raw/MyCallConnect
+        read_only: true
+      - type: bind
+        source: /root/SalamTalk
+        target: /data/raw/SalamTalk
+        read_only: true
+      - type: bind
+        source: /root/Dialphone
+        target: /data/raw/Dialphone
+        read_only: true
+      - type: bind
+        source: /root/Vestacall
+        target: /data/raw/Vestacall
+        read_only: true
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
   cdr-cache-warmer:
     build:
       context: .
@@ -67,6 +153,37 @@ services:
       cdr-direct:
         condition: service_healthy
 
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile.grafana
+    init: true
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: "${SERVICE_PASSWORD_GRAFANAADMIN:?Coolify generates this Grafana admin password}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: ""
+      CLICKHOUSE_GRAFANA_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEGRAFANA:?Coolify generates this Grafana datasource password}"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    stop_grace_period: 30s
+
 volumes:
   cdr-runtime:
   cdr-parquet:
+  clickhouse-data:
+  clickhouse-logs:
+  grafana-data:
