@@ -4,6 +4,7 @@
 import argparse
 import csv
 import gzip
+import ipaddress
 import json
 import os
 import re
@@ -44,6 +45,9 @@ FILE_PAUSE_SECONDS = max(
 QUERY_TIMEOUT_SECONDS = max(
     60, int(os.environ.get('CDR_INGEST_QUERY_TIMEOUT', '1800')),
 )
+WATCHED_TERM_MEDIA_IPS_RAW = os.environ.get(
+    'CDR_WATCHED_TERM_MEDIA_IPS', '',
+)
 
 
 @dataclass(frozen=True)
@@ -70,6 +74,26 @@ def sql_identifier(value):
     if not HEADER_RE.fullmatch(value):
         raise ValueError('unsafe CSV header: {!r}'.format(value))
     return '`{}`'.format(value)
+
+
+def parse_watched_term_media_ips(value):
+    """Return unique, normalized IPv4/IPv6 addresses from an env string."""
+    addresses = []
+    seen = set()
+    for candidate in re.split(r'[\s,;]+', str(value).strip()):
+        if not candidate:
+            continue
+        try:
+            normalized = str(ipaddress.ip_address(candidate))
+        except ValueError as exc:
+            raise ValueError(
+                'invalid Termination Media IP in '
+                'CDR_WATCHED_TERM_MEDIA_IPS: {!r}'.format(candidate),
+            ) from exc
+        if normalized not in seen:
+            seen.add(normalized)
+            addresses.append(normalized)
+    return tuple(addresses)
 
 
 class ClickHouseHTTP:
@@ -112,6 +136,34 @@ class ClickHouseHTTP:
     def json_rows(self, query):
         text = self.execute(query.rstrip().rstrip(';') + ' FORMAT JSONEachRow')
         return [json.loads(line) for line in text.splitlines() if line.strip()]
+
+
+def sync_termination_media_ip_watchlist(client, addresses):
+    """Make ClickHouse's watchlist exactly match the configured IP list."""
+    client.execute("""
+CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watchlist
+(
+    termination_media_ip String,
+    updated_at DateTime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+ENGINE = MergeTree
+ORDER BY termination_media_ip
+""")
+    client.execute('TRUNCATE TABLE cdr.termination_media_ip_watchlist')
+    if addresses:
+        values = ',\n'.join(
+            '({})'.format(sql_string(address)) for address in addresses
+        )
+        client.execute("""
+INSERT INTO cdr.termination_media_ip_watchlist
+    (termination_media_ip)
+VALUES
+{}
+""".format(values))
+    log(
+        'Termination Media IP watchlist synchronized:',
+        '{} IP(s)'.format(len(addresses)),
+    )
 
 
 def read_csv_header(path):
@@ -449,6 +501,14 @@ def main(argv=None):
         return 2
     client = ClickHouseHTTP()
     wait_for_clickhouse(client)
+    try:
+        watched_addresses = parse_watched_term_media_ips(
+            WATCHED_TERM_MEDIA_IPS_RAW,
+        )
+    except ValueError as exc:
+        log('fatal:', exc)
+        return 2
+    sync_termination_media_ip_watchlist(client, watched_addresses)
     lookback_days = max(1, args.backfill_days)
 
     if args.once and not args.loop:

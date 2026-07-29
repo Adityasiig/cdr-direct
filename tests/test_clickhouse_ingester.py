@@ -153,8 +153,55 @@ class SqlAndIdempotencyTests(unittest.TestCase):
         read_header.assert_not_called()
 
 
+class TerminationMediaIPWatchlistTests(unittest.TestCase):
+    def test_watchlist_parser_normalizes_and_deduplicates_addresses(self):
+        addresses = ingester.parse_watched_term_media_ips(
+            '203.0.113.10, 2001:0db8::1;203.0.113.10\n198.51.100.20',
+        )
+        self.assertEqual(
+            addresses,
+            ('203.0.113.10', '2001:db8::1', '198.51.100.20'),
+        )
+
+    def test_watchlist_parser_rejects_invalid_addresses(self):
+        with self.assertRaisesRegex(
+                ValueError, 'invalid Termination Media IP'):
+            ingester.parse_watched_term_media_ips(
+                '203.0.113.10, definitely-not-an-ip',
+            )
+
+    def test_watchlist_sync_replaces_existing_clickhouse_rows(self):
+        client = mock.Mock()
+        ingester.sync_termination_media_ip_watchlist(
+            client, ('203.0.113.10', '2001:db8::1'),
+        )
+        queries = [call.args[0] for call in client.execute.call_args_list]
+        self.assertEqual(len(queries), 3)
+        self.assertIn(
+            'CREATE TABLE IF NOT EXISTS '
+            'cdr.termination_media_ip_watchlist',
+            queries[0],
+        )
+        self.assertEqual(
+            queries[1],
+            'TRUNCATE TABLE cdr.termination_media_ip_watchlist',
+        )
+        self.assertIn("'203.0.113.10'", queries[2])
+        self.assertIn("'2001:db8::1'", queries[2])
+
+    def test_empty_watchlist_clears_rows_without_an_insert(self):
+        client = mock.Mock()
+        ingester.sync_termination_media_ip_watchlist(client, ())
+        queries = [call.args[0] for call in client.execute.call_args_list]
+        self.assertEqual(len(queries), 2)
+        self.assertEqual(
+            queries[1],
+            'TRUNCATE TABLE cdr.termination_media_ip_watchlist',
+        )
+
+
 class ProvisioningTests(unittest.TestCase):
-    def test_schema_and_dashboard_are_term_media_ip_first(self):
+    def test_schema_and_dashboard_are_termination_media_ip_first(self):
         schema = Path('clickhouse/init/001_schema.sql').read_text(encoding='utf-8')
         dashboard = json.loads(
             Path('grafana/dashboards/term-media-ip.json').read_text(
@@ -178,17 +225,52 @@ class ProvisioningTests(unittest.TestCase):
         self.assertNotIn("singlequote} = 'All'", dashboard_sql)
         self.assertIn('cdr.ingest_log FINAL', dashboard_sql)
         self.assertEqual(dashboard['uid'], 'cdr-term-media-ip')
-        self.assertEqual(dashboard['title'], 'CDR - Simple Route Analytics')
+        self.assertEqual(
+            dashboard['title'],
+            'CDR - Termination Media IP Monitor',
+        )
         self.assertNotIn('groupUniqArray', dashboard_sql)
         self.assertNotIn('any(term_ip)', dashboard_sql)
         self.assertIn(
-            'GROUP BY orig_trunk_group_name, term_carrier_name, '
+            'GROUP BY entity, orig_trunk_group_name, term_carrier_name, '
             'term_trunk_group_name, term_ip, term_media_ip',
             dashboard_sql,
         )
+        self.assertIn(
+            'term_media_ip IN (SELECT termination_media_ip '
+            'FROM cdr.termination_media_ip_watchlist)',
+            dashboard_sql,
+        )
+        self.assertIn(
+            'CREATE TABLE IF NOT EXISTS '
+            'cdr.termination_media_ip_watchlist',
+            schema,
+        )
+        panel_titles = [panel['title'] for panel in dashboard['panels']]
+        self.assertIn('WATCHED IP ALERT', panel_titles)
+        self.assertIn(
+            'Watched Termination Media IP Matches',
+            panel_titles,
+        )
+        self.assertIn('Termination Route Map', panel_titles)
+        self.assertFalse(
+            {'Total Calls', 'Revenue', 'Profit'}.intersection(panel_titles),
+        )
+        self.assertNotIn('AS Revenue', dashboard_sql)
+        self.assertNotIn('AS Profit', dashboard_sql)
         self.assertEqual(
             [variable['name'] for variable in dashboard['templating']['list']],
             ['entity', 'origin_trunk', 'vendor', 'trunk', 'media_ip'],
+        )
+        self.assertEqual(
+            [variable['label'] for variable in dashboard['templating']['list']],
+            [
+                'CDR Source',
+                'Incoming Customer Trunk',
+                'Termination Vendor',
+                'Termination Trunk',
+                'Termination Media IP',
+            ],
         )
         for variable in dashboard['templating']['list']:
             self.assertIsNone(variable['allValue'])
@@ -202,6 +284,12 @@ class ProvisioningTests(unittest.TestCase):
         for panel in route_panels:
             panel_sql = panel['targets'][0]['rawSql']
             self.assertIn('$origin_trunk', panel_sql, panel['title'])
+
+    def test_compose_passes_the_termination_media_ip_watchlist(self):
+        compose = Path('docker-compose.single-server.yml').read_text(
+            encoding='utf-8',
+        )
+        self.assertIn('CDR_WATCHED_TERM_MEDIA_IPS:', compose)
 
     def test_dashboard_provisioning_is_outside_persistent_grafana_volume(self):
         dockerfile = Path('Dockerfile.grafana').read_text(encoding='utf-8')

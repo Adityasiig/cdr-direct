@@ -116,6 +116,8 @@ services:
       CDR_INGEST_MIN_AGE_SECONDS: "${CDR_INGEST_MIN_AGE_SECONDS:-600}"
       CDR_INGEST_INTERVAL_SECONDS: "${CDR_INGEST_INTERVAL_SECONDS:-60}"
       CDR_INGEST_QUERY_TIMEOUT: "${CDR_INGEST_QUERY_TIMEOUT:-1800}"
+      # Comma, space, semicolon, or newline-separated IPv4/IPv6 addresses.
+      CDR_WATCHED_TERM_MEDIA_IPS: "${CDR_WATCHED_TERM_MEDIA_IPS:-}"
     volumes:
       - type: bind
         source: /root/MyCallConnect

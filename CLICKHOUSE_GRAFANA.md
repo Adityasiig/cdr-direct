@@ -15,9 +15,11 @@ and validation.
 5. Grafana reads the hourly table for dashboards and `cdr.raw_cdr` only for the
    latest 1,000-row drill-down.
 
-The required 46Labs header is `term_media_ip`. A file without this header is
-rejected and shown as an ingestion error rather than silently loading
-incomplete analytics.
+The required 46Labs header is `term_media_ip`. In this project that field is
+displayed everywhere as **Termination Media IP**. It is the media IP selected
+on the termination/vendor side of the call, not the incoming customer IP. A
+file without this header is rejected and shown as an ingestion error rather
+than silently loading incomplete analytics.
 
 ## Coolify deployment
 
@@ -42,9 +44,17 @@ After pulling the new Git commit:
    - `grafana`
 3. Assign a public domain only to `grafana`, using container port `3000`.
 4. Do not assign a domain to ClickHouse ports `8123` or `9000`.
-5. Redeploy.
-6. Open the Grafana service logs and wait for `HTTP Server Listen`.
-7. Open the ingester logs and look for `INGESTED` messages.
+5. In **Environment Variables**, add the Termination Media IPs that must be
+   watched. Commas, spaces, semicolons, and new lines are accepted:
+
+   ```text
+   CDR_WATCHED_TERM_MEDIA_IPS=203.0.113.10,198.51.100.20
+   ```
+
+6. Redeploy.
+7. Open the Grafana service logs and wait for `HTTP Server Listen`.
+8. Open the ingester logs and look for `INGESTED` messages and
+   `Termination Media IP watchlist synchronized`.
 
 Grafana login:
 
@@ -54,7 +64,17 @@ Grafana login:
 
 The provisioned dashboard is:
 
-`CDR Analytics / CDR — Term Media IP Analytics`
+`CDR Analytics / CDR - Termination Media IP Monitor`
+
+The dashboard intentionally omits revenue, profit, and general total-call KPI
+cards. It shows each route in a direct order:
+
+`Incoming Customer Trunk -> Termination Vendor -> Termination Trunk -> Termination Media IP`
+
+`WATCHED IP ALERT` turns red when one or more configured IPs appear in the
+selected time window. The adjacent match table shows exactly which source,
+incoming trunk, termination vendor, termination trunk, signaling IP, and
+Termination Media IP produced the match.
 
 ## Initial backfill
 

@@ -87,6 +87,14 @@ CREATE TABLE IF NOT EXISTS cdr.ingest_log
 ENGINE = ReplacingMergeTree(updated_at)
 ORDER BY file_path;
 
+CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watchlist
+(
+    termination_media_ip String,
+    updated_at DateTime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+ENGINE = MergeTree
+ORDER BY termination_media_ip;
+
 CREATE TABLE IF NOT EXISTS cdr.cdr_hourly_media_ip
 (
     day Date,

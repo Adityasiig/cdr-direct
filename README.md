@@ -199,7 +199,8 @@ virtual environments are excluded by `.gitignore`.
 ## ClickHouse and Grafana
 
 The single-server stack can now ingest stable hourly 46Labs gzip files into
-ClickHouse and provision Grafana with a Term Media IP dashboard. The existing
-DuckDB dashboard stays online during rollout. See
+ClickHouse and provision Grafana with a Termination Media IP monitor and
+configurable IP watchlist. The existing DuckDB dashboard stays online during
+rollout. See
 [`CLICKHOUSE_GRAFANA.md`](CLICKHOUSE_GRAFANA.md) for deployment, initial
 backfill, generated passwords, and ingestion-safety behavior.
