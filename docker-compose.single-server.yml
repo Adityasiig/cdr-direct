@@ -11,6 +11,9 @@ services:
       CLICKHOUSE_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEADMIN:?Coolify generates this ClickHouse admin password}"
       CLICKHOUSE_GRAFANA_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEGRAFANA:?Coolify generates this Grafana datasource password}"
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      # /cdr-source contains the very large read-only CDR tree. Its parent is
+      # owned correctly in the image, so never recursively chown source files.
+      CLICKHOUSE_DO_NOT_CHOWN: "1"
     expose:
       - "8123"
       - "9000"
