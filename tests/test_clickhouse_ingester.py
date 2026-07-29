@@ -178,9 +178,30 @@ class ProvisioningTests(unittest.TestCase):
         self.assertNotIn("singlequote} = 'All'", dashboard_sql)
         self.assertIn('cdr.ingest_log FINAL', dashboard_sql)
         self.assertEqual(dashboard['uid'], 'cdr-term-media-ip')
+        self.assertEqual(dashboard['title'], 'CDR - Simple Route Analytics')
+        self.assertNotIn('groupUniqArray', dashboard_sql)
+        self.assertNotIn('any(term_ip)', dashboard_sql)
+        self.assertIn(
+            'GROUP BY orig_trunk_group_name, term_carrier_name, '
+            'term_trunk_group_name, term_ip, term_media_ip',
+            dashboard_sql,
+        )
+        self.assertEqual(
+            [variable['name'] for variable in dashboard['templating']['list']],
+            ['entity', 'origin_trunk', 'vendor', 'trunk', 'media_ip'],
+        )
         for variable in dashboard['templating']['list']:
             self.assertIsNone(variable['allValue'])
             self.assertEqual(variable['current']['value'], '$__all')
+        route_panels = [
+            panel for panel in dashboard['panels']
+            if panel.get('datasource', {}).get('uid') == 'cdr-clickhouse'
+            and panel['id'] != 15
+        ]
+        self.assertTrue(route_panels)
+        for panel in route_panels:
+            panel_sql = panel['targets'][0]['rawSql']
+            self.assertIn('$origin_trunk', panel_sql, panel['title'])
 
     def test_dashboard_provisioning_is_outside_persistent_grafana_volume(self):
         dockerfile = Path('Dockerfile.grafana').read_text(encoding='utf-8')
