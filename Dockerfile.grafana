@@ -4,7 +4,10 @@ USER root
 RUN grafana cli plugins install grafana-clickhouse-datasource 4.15.0
 
 COPY grafana/provisioning/ /etc/grafana/provisioning/
-COPY grafana/dashboards/ /var/lib/grafana/dashboards/
+# Keep provisioned dashboards outside /var/lib/grafana. Coolify mounts the
+# persistent Grafana data volume there, which would otherwise hide dashboard
+# updates baked into newer images.
+COPY grafana/dashboards/ /etc/grafana/dashboards/
 
-RUN chown -R 472:0 /etc/grafana/provisioning /var/lib/grafana/dashboards
+RUN chown -R 472:0 /etc/grafana/provisioning /etc/grafana/dashboards
 USER 472

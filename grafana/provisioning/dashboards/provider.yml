@@ -10,5 +10,7 @@ providers:
     allowUiUpdates: false
     updateIntervalSeconds: 30
     options:
-      path: /var/lib/grafana/dashboards
+      # This path is part of the immutable image, not the persistent
+      # /var/lib/grafana volume, so every deployment receives dashboard updates.
+      path: /etc/grafana/dashboards
       foldersFromFilesStructure: false

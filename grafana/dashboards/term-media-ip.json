@@ -229,6 +229,6 @@
   "timezone": "utc",
   "title": "CDR — Term Media IP Analytics",
   "uid": "cdr-term-media-ip",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

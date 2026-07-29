@@ -169,9 +169,22 @@ class ProvisioningTests(unittest.TestCase):
         self.assertIn('term_media_ip String', schema)
         self.assertIn('cdr_hourly_media_ip_mv', schema)
         self.assertIn('term_media_ip', dashboard_sql)
-        self.assertIn("${media_ip:sqlstring} != 'All'", dashboard_sql)
+        self.assertIn("${media_ip:singlequote} != 'All'", dashboard_sql)
+        self.assertNotIn(':sqlstring}', dashboard_sql)
         self.assertIn('cdr.ingest_log FINAL', dashboard_sql)
         self.assertEqual(dashboard['uid'], 'cdr-term-media-ip')
+
+    def test_dashboard_provisioning_is_outside_persistent_grafana_volume(self):
+        dockerfile = Path('Dockerfile.grafana').read_text(encoding='utf-8')
+        provider = Path(
+            'grafana/provisioning/dashboards/provider.yml',
+        ).read_text(encoding='utf-8')
+        self.assertIn(
+            'COPY grafana/dashboards/ /etc/grafana/dashboards/',
+            dockerfile,
+        )
+        self.assertIn('path: /etc/grafana/dashboards', provider)
+        self.assertNotIn('path: /var/lib/grafana/dashboards', provider)
 
 
 if __name__ == '__main__':
