@@ -169,10 +169,18 @@ class ProvisioningTests(unittest.TestCase):
         self.assertIn('term_media_ip String', schema)
         self.assertIn('cdr_hourly_media_ip_mv', schema)
         self.assertIn('term_media_ip', dashboard_sql)
-        self.assertIn("${media_ip:singlequote} != 'All'", dashboard_sql)
+        self.assertIn(
+            '$__conditionalAll('
+            'term_media_ip = ${media_ip:singlequote}, $media_ip)',
+            dashboard_sql,
+        )
         self.assertNotIn(':sqlstring}', dashboard_sql)
+        self.assertNotIn("singlequote} = 'All'", dashboard_sql)
         self.assertIn('cdr.ingest_log FINAL', dashboard_sql)
         self.assertEqual(dashboard['uid'], 'cdr-term-media-ip')
+        for variable in dashboard['templating']['list']:
+            self.assertIsNone(variable['allValue'])
+            self.assertEqual(variable['current']['value'], '$__all')
 
     def test_dashboard_provisioning_is_outside_persistent_grafana_volume(self):
         dockerfile = Path('Dockerfile.grafana').read_text(encoding='utf-8')
