@@ -11,7 +11,6 @@ services:
       CLICKHOUSE_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEADMIN:?Coolify generates this ClickHouse admin password}"
       CLICKHOUSE_GRAFANA_PASSWORD: "${SERVICE_PASSWORD_CLICKHOUSEGRAFANA:?Coolify generates this Grafana datasource password}"
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
-      CLICKHOUSE_RUN_AS_ROOT: "1"
     expose:
       - "8123"
       - "9000"
