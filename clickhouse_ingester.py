@@ -76,9 +76,10 @@ def sql_identifier(value):
     return '`{}`'.format(value)
 
 
-def parse_watched_term_media_ips(value):
+def parse_watched_term_media_ips(value, ignore_invalid=False):
     """Return unique, normalized IPv4/IPv6 addresses from an env string."""
     addresses = []
+    invalid = []
     seen = set()
     for candidate in re.split(r'[\s,;]+', str(value).strip()):
         if not candidate:
@@ -86,13 +87,18 @@ def parse_watched_term_media_ips(value):
         try:
             normalized = str(ipaddress.ip_address(candidate))
         except ValueError as exc:
-            raise ValueError(
-                'invalid Termination Media IP in '
-                'CDR_WATCHED_TERM_MEDIA_IPS: {!r}'.format(candidate),
-            ) from exc
+            if not ignore_invalid:
+                raise ValueError(
+                    'invalid Termination Media IP in '
+                    'CDR_WATCHED_TERM_MEDIA_IPS: {!r}'.format(candidate),
+                ) from exc
+            invalid.append(candidate)
+            continue
         if normalized not in seen:
             seen.add(normalized)
             addresses.append(normalized)
+    if ignore_invalid:
+        return tuple(addresses), tuple(invalid)
     return tuple(addresses)
 
 
@@ -621,12 +627,19 @@ def main(argv=None):
     client = ClickHouseHTTP()
     wait_for_clickhouse(client)
     try:
-        watched_addresses = parse_watched_term_media_ips(
-            WATCHED_TERM_MEDIA_IPS_RAW,
+        watched_addresses, invalid_addresses = parse_watched_term_media_ips(
+            WATCHED_TERM_MEDIA_IPS_RAW, ignore_invalid=True,
         )
     except ValueError as exc:
         log('fatal:', exc)
         return 2
+    if invalid_addresses:
+        log(
+            'warning: ignored {} malformed watchlist value(s):'.format(
+                len(invalid_addresses),
+            ),
+            ', '.join(repr(value) for value in invalid_addresses[:10]),
+        )
     sync_termination_media_ip_watchlist(client, watched_addresses)
     lookback_days = max(1, args.backfill_days)
 

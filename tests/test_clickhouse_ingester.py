@@ -170,6 +170,17 @@ class TerminationMediaIPWatchlistTests(unittest.TestCase):
                 '203.0.113.10, definitely-not-an-ip',
             )
 
+    def test_runtime_parser_keeps_valid_addresses_and_reports_bad_ones(self):
+        addresses, invalid = ingester.parse_watched_term_media_ips(
+            '203.0.113.10,70.36.,198.51.100.20',
+            ignore_invalid=True,
+        )
+        self.assertEqual(
+            addresses,
+            ('203.0.113.10', '198.51.100.20'),
+        )
+        self.assertEqual(invalid, ('70.36.',))
+
     def test_watchlist_sync_replaces_existing_clickhouse_rows(self):
         client = mock.Mock()
         ingester.sync_termination_media_ip_watchlist(
