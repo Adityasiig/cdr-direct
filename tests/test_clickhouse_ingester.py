@@ -297,6 +297,10 @@ class ProvisioningTests(unittest.TestCase):
         )
         panel_titles = [panel['title'] for panel in dashboard['panels']]
         self.assertNotIn('Termination route guide', panel_titles)
+        self.assertNotIn(
+            'Termination Media IP Activity by Hour',
+            panel_titles,
+        )
         self.assertIn('WATCHED IP ALERT', panel_titles)
         self.assertIn(
             'Watched Termination Media IP Matches',
@@ -334,7 +338,7 @@ class ProvisioningTests(unittest.TestCase):
         for panel in route_panels:
             panel_sql = panel['targets'][0]['rawSql']
             self.assertIn('$origin_trunk', panel_sql, panel['title'])
-        for panel_id in (3, 4, 5, 6):
+        for panel_id in (3, 5, 6):
             panel = next(
                 panel for panel in dashboard['panels']
                 if panel['id'] == panel_id

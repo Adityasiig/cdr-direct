@@ -56,19 +56,9 @@
     },
     {
       "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
-      "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 12, "lineWidth": 2, "showPoints": "never"}}, "overrides": []},
-      "gridPos": {"h": 8, "w": 14, "x": 0, "y": 19},
-      "id": 4,
-      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
-      "targets": [{"editorType": "sql", "format": 0, "queryType": "sql", "rawSql": "SELECT hour AS time, sum(attempts) AS `CDRs`, sum(completions) AS `Answered` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY hour ORDER BY hour", "refId": "A"}],
-      "title": "Termination Media IP Activity by Hour",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
       "description": "The most active Termination Media IP routes in the selected time range.",
       "fieldConfig": {"defaults": {}, "overrides": [{"matcher": {"id": "byName", "options": "CDRs"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}]},
-      "gridPos": {"h": 8, "w": 10, "x": 14, "y": 19},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 19},
       "id": 5,
       "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "CDRs"}]},
       "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Trunk`, term_carrier_name AS Vendor, term_trunk_group_name AS `Termination Trunk`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name ORDER BY CDRs DESC LIMIT 50", "refId": "A"}],
@@ -190,6 +180,6 @@
   "timezone": "utc",
   "title": "CDR - Termination Media IP Monitor",
   "uid": "cdr-term-media-ip",
-  "version": 7,
+  "version": 8,
   "weekStart": ""
 }
