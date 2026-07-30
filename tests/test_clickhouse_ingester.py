@@ -176,28 +176,65 @@ class TerminationMediaIPWatchlistTests(unittest.TestCase):
             client, ('203.0.113.10', '2001:db8::1'),
         )
         queries = [call.args[0] for call in client.execute.call_args_list]
-        self.assertEqual(len(queries), 3)
+        self.assertEqual(len(queries), 6)
         self.assertIn(
             'CREATE TABLE IF NOT EXISTS '
             'cdr.termination_media_ip_watchlist',
             queries[0],
         )
-        self.assertEqual(
+        self.assertIn(
+            'CREATE TABLE IF NOT EXISTS '
+            'cdr.termination_media_ip_watch_hits',
             queries[1],
+        )
+        self.assertEqual(
+            queries[2],
             'TRUNCATE TABLE cdr.termination_media_ip_watchlist',
         )
-        self.assertIn("'203.0.113.10'", queries[2])
-        self.assertIn("'2001:db8::1'", queries[2])
+        self.assertEqual(
+            queries[3],
+            'TRUNCATE TABLE cdr.termination_media_ip_watch_hits',
+        )
+        self.assertIn("'203.0.113.10'", queries[4])
+        self.assertIn("'2001:db8::1'", queries[4])
+        self.assertIn(
+            'INSERT INTO cdr.termination_media_ip_watch_hits',
+            queries[5],
+        )
+        self.assertIn('FROM cdr.cdr_hourly_media_ip', queries[5])
 
     def test_empty_watchlist_clears_rows_without_an_insert(self):
         client = mock.Mock()
         ingester.sync_termination_media_ip_watchlist(client, ())
         queries = [call.args[0] for call in client.execute.call_args_list]
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(len(queries), 4)
         self.assertEqual(
-            queries[1],
+            queries[2],
             'TRUNCATE TABLE cdr.termination_media_ip_watchlist',
         )
+        self.assertEqual(
+            queries[3],
+            'TRUNCATE TABLE cdr.termination_media_ip_watch_hits',
+        )
+
+    def test_new_hour_refreshes_permanent_watch_hits(self):
+        client = mock.Mock()
+        source = ingester.SourceFile(
+            entity='MyCallConnect',
+            file_hour=datetime(2026, 7, 28, 3, tzinfo=timezone.utc),
+            path=Path('/data/raw/MyCallConnect/2026/07/28/03.csv.gz'),
+            clickhouse_path='cdr/MyCallConnect/2026/07/28/03.csv.gz',
+            size=123,
+            mtime_ns=456,
+        )
+        ingester.refresh_termination_media_ip_watch_hits(client, source)
+        query = client.execute.call_args.args[0]
+        self.assertIn(
+            'INSERT INTO cdr.termination_media_ip_watch_hits',
+            query,
+        )
+        self.assertIn("entity = 'MyCallConnect'", query)
+        self.assertIn("'2026-07-28 03:00:00'", query)
 
 
 class ProvisioningTests(unittest.TestCase):
@@ -236,17 +273,19 @@ class ProvisioningTests(unittest.TestCase):
             'term_trunk_group_name, term_ip, term_media_ip',
             dashboard_sql,
         )
-        self.assertIn(
-            'term_media_ip IN (SELECT termination_media_ip '
-            'FROM cdr.termination_media_ip_watchlist)',
-            dashboard_sql,
-        )
+        self.assertIn('cdr.termination_media_ip_watch_hits FINAL', dashboard_sql)
         self.assertIn(
             'CREATE TABLE IF NOT EXISTS '
             'cdr.termination_media_ip_watchlist',
             schema,
         )
+        self.assertIn(
+            'CREATE TABLE IF NOT EXISTS '
+            'cdr.termination_media_ip_watch_hits',
+            schema,
+        )
         panel_titles = [panel['title'] for panel in dashboard['panels']]
+        self.assertNotIn('Termination route guide', panel_titles)
         self.assertIn('WATCHED IP ALERT', panel_titles)
         self.assertIn(
             'Watched Termination Media IP Matches',
@@ -278,7 +317,7 @@ class ProvisioningTests(unittest.TestCase):
         route_panels = [
             panel for panel in dashboard['panels']
             if panel.get('datasource', {}).get('uid') == 'cdr-clickhouse'
-            and panel['id'] != 15
+            and panel['id'] not in {1, 2, 15}
         ]
         self.assertTrue(route_panels)
         for panel in route_panels:
@@ -301,6 +340,18 @@ class ProvisioningTests(unittest.TestCase):
             'notEmpty(term_media_ip)',
             raw_cdr_panel['targets'][0]['rawSql'],
         )
+        for panel_id in (1, 2):
+            panel = next(
+                panel for panel in dashboard['panels']
+                if panel['id'] == panel_id
+            )
+            panel_sql = panel['targets'][0]['rawSql']
+            self.assertNotIn('$__timeFilter', panel_sql)
+            self.assertNotIn('$origin_trunk', panel_sql)
+            self.assertIn(
+                'cdr.termination_media_ip_watch_hits FINAL',
+                panel_sql,
+            )
 
     def test_compose_passes_the_termination_media_ip_watchlist(self):
         compose = Path('docker-compose.single-server.yml').read_text(

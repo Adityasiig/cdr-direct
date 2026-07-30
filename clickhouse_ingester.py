@@ -149,7 +149,34 @@ CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watchlist
 ENGINE = MergeTree
 ORDER BY termination_media_ip
 """)
+    client.execute("""
+CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watch_hits
+(
+    hour DateTime('UTC'),
+    termination_media_ip String,
+    entity LowCardinality(String),
+    orig_trunk_group_name LowCardinality(String),
+    term_carrier_name LowCardinality(String),
+    term_trunk_group_name LowCardinality(String),
+    term_ip String,
+    matching_cdrs UInt64,
+    updated_at DateTime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+ENGINE = ReplacingMergeTree(updated_at)
+PARTITION BY toYYYYMM(hour)
+ORDER BY
+(
+    termination_media_ip,
+    hour,
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip
+)
+""")
     client.execute('TRUNCATE TABLE cdr.termination_media_ip_watchlist')
+    client.execute('TRUNCATE TABLE cdr.termination_media_ip_watch_hits')
     if addresses:
         values = ',\n'.join(
             '({})'.format(sql_string(address)) for address in addresses
@@ -160,10 +187,99 @@ INSERT INTO cdr.termination_media_ip_watchlist
 VALUES
 {}
 """.format(values))
+        log(
+            'rebuilding all-history Termination Media IP matches for',
+            '{} configured IP(s)'.format(len(addresses)),
+        )
+        client.execute("""
+INSERT INTO cdr.termination_media_ip_watch_hits
+(
+    hour,
+    termination_media_ip,
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip,
+    matching_cdrs,
+    updated_at
+)
+SELECT
+    hour,
+    trimBoth(term_media_ip),
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip,
+    sum(attempts),
+    now64(3, 'UTC')
+FROM cdr.cdr_hourly_media_ip
+WHERE trimBoth(term_media_ip) IN
+(
+    SELECT termination_media_ip
+    FROM cdr.termination_media_ip_watchlist
+)
+GROUP BY
+    hour,
+    trimBoth(term_media_ip),
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip
+""")
     log(
         'Termination Media IP watchlist synchronized:',
         '{} IP(s)'.format(len(addresses)),
     )
+
+
+def refresh_termination_media_ip_watch_hits(client, source):
+    """Record watched Termination Media IP matches from one ingested hour."""
+    client.execute("""
+INSERT INTO cdr.termination_media_ip_watch_hits
+(
+    hour,
+    termination_media_ip,
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip,
+    matching_cdrs,
+    updated_at
+)
+SELECT
+    hour,
+    trimBoth(term_media_ip),
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip,
+    sum(attempts),
+    now64(3, 'UTC')
+FROM cdr.cdr_hourly_media_ip
+WHERE entity = {entity}
+  AND hour = toDateTime({file_hour}, 'UTC')
+  AND trimBoth(term_media_ip) IN
+  (
+      SELECT termination_media_ip
+      FROM cdr.termination_media_ip_watchlist
+  )
+GROUP BY
+    hour,
+    trimBoth(term_media_ip),
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip
+""".format(
+        entity=sql_string(source.entity),
+        file_hour=sql_string(source.file_hour.strftime('%Y-%m-%d %H:%M:%S')),
+    ))
 
 
 def read_csv_header(path):
@@ -442,6 +558,7 @@ def ingest_one(client, source):
         write_log(client, source, 'ingesting', 0, 'validated; insert started')
         client.execute(build_insert_sql(source, headers))
         inserted_rows = rows_for_source(client, source)
+        refresh_termination_media_ip_watch_hits(client, source)
         write_log(client, source, 'done', inserted_rows, 'complete')
         return 'ingested', inserted_rows
     except Exception as exc:
@@ -465,6 +582,8 @@ def run_once(client, lookback_days):
             stats[status] += 1
             if status in {'ingested', 'recovered'}:
                 stats['rows'] += rows
+                if status == 'recovered':
+                    refresh_termination_media_ip_watch_hits(client, source)
                 log(
                     status.upper(), source.entity,
                     source.file_hour.isoformat(), '{:,} rows'.format(rows),

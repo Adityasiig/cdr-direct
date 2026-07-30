@@ -95,6 +95,31 @@ CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watchlist
 ENGINE = MergeTree
 ORDER BY termination_media_ip;
 
+CREATE TABLE IF NOT EXISTS cdr.termination_media_ip_watch_hits
+(
+    hour DateTime('UTC'),
+    termination_media_ip String,
+    entity LowCardinality(String),
+    orig_trunk_group_name LowCardinality(String),
+    term_carrier_name LowCardinality(String),
+    term_trunk_group_name LowCardinality(String),
+    term_ip String,
+    matching_cdrs UInt64,
+    updated_at DateTime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+ENGINE = ReplacingMergeTree(updated_at)
+PARTITION BY toYYYYMM(hour)
+ORDER BY
+(
+    termination_media_ip,
+    hour,
+    entity,
+    orig_trunk_group_name,
+    term_carrier_name,
+    term_trunk_group_name,
+    term_ip
+);
+
 CREATE TABLE IF NOT EXISTS cdr.cdr_hourly_media_ip
 (
     day Date,
