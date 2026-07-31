@@ -306,6 +306,10 @@ class ProvisioningTests(unittest.TestCase):
             'Watched Termination Media IP Matches',
             panel_titles,
         )
+        self.assertIn(
+            'Watched IP Individual CDRs (latest 1,000)',
+            panel_titles,
+        )
         self.assertIn('Termination Route Map', panel_titles)
         self.assertFalse(
             {'Total Calls', 'Revenue', 'Profit'}.intersection(panel_titles),
@@ -332,7 +336,7 @@ class ProvisioningTests(unittest.TestCase):
         route_panels = [
             panel for panel in dashboard['panels']
             if panel.get('datasource', {}).get('uid') == 'cdr-clickhouse'
-            and panel['id'] not in {1, 2, 15}
+            and panel['id'] not in {1, 2, 8, 15}
         ]
         self.assertTrue(route_panels)
         for panel in route_panels:
@@ -367,6 +371,18 @@ class ProvisioningTests(unittest.TestCase):
                 'cdr.termination_media_ip_watch_hits FINAL',
                 panel_sql,
             )
+        watched_cdr_panel = next(
+            panel for panel in dashboard['panels'] if panel['id'] == 8
+        )
+        watched_cdr_sql = watched_cdr_panel['targets'][0]['rawSql']
+        self.assertIn('FROM cdr.raw_cdr', watched_cdr_sql)
+        self.assertIn('cdr.termination_media_ip_watchlist', watched_cdr_sql)
+        self.assertIn('cdr.termination_media_ip_watch_hits FINAL', watched_cdr_sql)
+        self.assertIn('from_did AS `ANI (From)`', watched_cdr_sql)
+        self.assertIn('to_did AS `DNIS (To)`', watched_cdr_sql)
+        self.assertIn('orig_trunk_group_name AS `Customer Trunk`', watched_cdr_sql)
+        self.assertIn('term_carrier_name AS `Termination Vendor`', watched_cdr_sql)
+        self.assertNotIn('$__timeFilter', watched_cdr_sql)
 
     def test_compose_passes_the_termination_media_ip_watchlist(self):
         compose = Path('docker-compose.single-server.yml').read_text(
