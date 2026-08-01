@@ -384,6 +384,11 @@ class ProvisioningTests(unittest.TestCase):
         self.assertIn('term_trunk_group_name AS `Termination Trunk`', watched_cdr_sql)
         self.assertNotIn('orig_carrier_name AS `Customer Carrier`', watched_cdr_sql)
         self.assertNotIn('term_carrier_name AS `Termination Vendor`', watched_cdr_sql)
+        self.assertIn(
+            '$__conditionalAll(trimBoth(term_media_ip) = '
+            '${media_ip:singlequote}, $media_ip)',
+            watched_cdr_sql,
+        )
         self.assertNotIn('$__timeFilter', watched_cdr_sql)
 
     def test_compose_passes_the_termination_media_ip_watchlist(self):

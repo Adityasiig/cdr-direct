@@ -50,7 +50,7 @@
       "gridPos": {"h": 14, "w": 24, "x": 0, "y": 7},
       "id": 8,
       "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Call Started"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "WITH (SELECT max(hour) FROM cdr.termination_media_ip_watch_hits FINAL) AS latest_hit_hour SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Customer Trunk`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, trimBoth(term_media_ip) AS `Termination Media IP`, from_did AS `ANI (From)`, to_did AS `DNIS (To)`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, callid AS `Call ID` FROM cdr.raw_cdr WHERE event_time >= latest_hit_hour - INTERVAL 24 HOUR AND event_time < latest_hit_hour + INTERVAL 1 HOUR AND trimBoth(term_media_ip) IN (SELECT termination_media_ip FROM cdr.termination_media_ip_watchlist) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "WITH (SELECT max(hour) FROM cdr.termination_media_ip_watch_hits FINAL) AS latest_hit_hour SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Customer Trunk`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, trimBoth(term_media_ip) AS `Termination Media IP`, from_did AS `ANI (From)`, to_did AS `DNIS (To)`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, callid AS `Call ID` FROM cdr.raw_cdr WHERE event_time >= latest_hit_hour - INTERVAL 24 HOUR AND event_time < latest_hit_hour + INTERVAL 1 HOUR AND trimBoth(term_media_ip) IN (SELECT termination_media_ip FROM cdr.termination_media_ip_watchlist) AND $__conditionalAll(trimBoth(term_media_ip) = ${media_ip:singlequote}, $media_ip) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
       "title": "Watched IP Individual CDRs (latest 1,000)",
       "type": "table"
     },
@@ -191,6 +191,6 @@
   "timezone": "utc",
   "title": "CDR - Termination Media IP Monitor",
   "uid": "cdr-term-media-ip",
-  "version": 10,
+  "version": 11,
   "weekStart": ""
 }
