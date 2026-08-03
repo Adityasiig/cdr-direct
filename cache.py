@@ -12,7 +12,10 @@ from datetime import date, datetime, timedelta, timezone
 
 from settings import CACHE_DB, MAX_RESULT_ROWS
 
-CACHE_KEY_VERSION = 2  # v2 switches the dashboard dimension to origin trunk.
+# Bump whenever the shape or meaning of report rows changes. Version 3 makes
+# `code` the exact origin billed prefix and adds the independent termination
+# billed prefix as `term_code`, so cached destination-derived rows are invalid.
+CACHE_KEY_VERSION = 3
 DAILY_SNAPSHOT_ENTITIES = (
     'MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall',
 )

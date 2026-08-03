@@ -159,6 +159,13 @@ class QueryLogicTests(unittest.TestCase):
 
         top_sql = captured_sql[1]
         self.assertIn("COALESCE(orig_trunk_group_name, '(none)') AS customer", top_sql)
+        self.assertIn('orig_billed_prefix', top_sql)
+        self.assertIn('term_billed_prefix', top_sql)
+        self.assertIn("trim(orig_billed_prefix)", top_sql)
+        self.assertIn("trim(term_billed_prefix)", top_sql)
+        self.assertIn('AS term_code', top_sql)
+        self.assertIn('GROUP BY customer, code, term_code', top_sql)
+        self.assertNotIn('substring(to_did, 2, 6)', top_sql)
         self.assertIn('WHERE asr_pct < 15 AND attempts >= 50', top_sql)
         self.assertIn('ORDER BY margin ASC', top_sql)
         self.assertNotIn('sip_code IN', top_sql)
@@ -197,6 +204,10 @@ class QueryLogicTests(unittest.TestCase):
             self.assertIsNone(error)
             self.assertIn('read_csv_auto', sql)
             self.assertIn('AS origin_trunk', sql)
+            self.assertIn('orig_billed_prefix', sql)
+            self.assertIn('term_billed_prefix', sql)
+            self.assertIn('AS term_code', sql)
+            self.assertNotIn('substring(to_did, 2, 6)', sql)
             self.assertIn('ORDER BY origin_trunk ASC', sql)
             self.assertNotIn('LIMIT ', sql.upper())
 

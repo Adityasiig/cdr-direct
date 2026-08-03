@@ -68,10 +68,16 @@ ENTITIES = ('MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall')
 # (reason IN (...) takes string literals).
 REASON_TOKEN_RE = re.compile(r'^[A-Z0-9_]{1,40}$')
 SORT_FIELDS = {
-    'customer', 'code', 'state', 'ratecenter', 'x5u_url', 'attest',
+    'customer', 'code', 'term_code', 'state', 'ratecenter', 'x5u_url', 'attest',
     'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin',
 }
 QUICK_FILTERS = {'fas-suspect', 'profitable'}
+
+# Preserve the exact prefixes selected by the 46Labs rate engine. Prefixes can
+# include the country code and can be different lengths; trimming or deriving
+# them from the DNIS would merge separately rated traffic.
+ORIG_BILLED_CODE_SQL = "COALESCE(NULLIF(trim(orig_billed_prefix), ''), '(unrated)')"
+TERM_BILLED_CODE_SQL = "COALESCE(NULLIF(trim(term_billed_prefix), ''), '(unrated)')"
 
 
 def sanitize_reasons(raw):
@@ -500,7 +506,8 @@ def compute_usa_codes(body):
         )
         sql = """
         SELECT
-          substring(to_did, 2, 6) AS code,
+          {origin_code} AS code,
+          {termination_code} AS term_code,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           COUNT(*) AS attempts,
@@ -512,9 +519,13 @@ def compute_usa_codes(body):
           ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
         FROM cdr_records
         WHERE {where}
-        GROUP BY code, state, ratecenter
+        GROUP BY code, term_code, state, ratecenter
         ORDER BY revenue DESC
-        """.format(where=where_sql)
+        """.format(
+            origin_code=ORIG_BILLED_CODE_SQL,
+            termination_code=TERM_BILLED_CODE_SQL,
+            where=where_sql,
+        )
         rows, err = db.run_query(sql, timeout=600)
     else:
         # CSV fallback — same as pre-DuckDB-native path
@@ -528,7 +539,8 @@ def compute_usa_codes(body):
         where_sql = build_where(parsed['sip_codes'], parsed['customer'], parsed['reasons'])
         sql = """
         SELECT
-          substring(to_did, 2, 6) AS code,
+          {origin_code} AS code,
+          {termination_code} AS term_code,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           COUNT(*) AS attempts,
@@ -538,11 +550,16 @@ def compute_usa_codes(body):
           ROUND(SUM(orig_cost), 4) AS revenue,
           ROUND(SUM(term_cost), 4) AS cost,
           ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
-        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR'}})
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR'}})
         WHERE {where}
-        GROUP BY code, state, ratecenter
+        GROUP BY code, term_code, state, ratecenter
         ORDER BY revenue DESC
-        """.format(glob=glob_list, where=where_sql)
+        """.format(
+            origin_code=ORIG_BILLED_CODE_SQL,
+            termination_code=TERM_BILLED_CODE_SQL,
+            glob=glob_list,
+            where=where_sql,
+        )
         rows, err = run_duckdb(sql, timeout=600)
     if err is not None:
         return {'error': err, 'sql': sql, '_http_status': 400}
@@ -593,7 +610,8 @@ def compute_usa_customer_codes(body):
         base_group_sql = """
         SELECT
           COALESCE(orig_trunk_group_name, '(none)') AS customer,
-          substring(to_did, 2, 6) AS code,
+          {origin_code} AS code,
+          {termination_code} AS term_code,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
@@ -607,7 +625,11 @@ def compute_usa_customer_codes(body):
           ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
         FROM cdr_records
         WHERE {where}
-        GROUP BY customer, code, state, ratecenter""".format(where=where_sql)
+        GROUP BY customer, code, term_code, state, ratecenter""".format(
+            origin_code=ORIG_BILLED_CODE_SQL,
+            termination_code=TERM_BILLED_CODE_SQL,
+            where=where_sql,
+        )
 
         totals_sql = """
         SELECT
@@ -632,7 +654,7 @@ def compute_usa_customer_codes(body):
         SELECT *, COUNT(*) OVER () AS filtered_row_count
         FROM ({base}) grouped
         {row_filter}
-        ORDER BY {sort_by} {sort_dir}, customer ASC, code ASC
+        ORDER BY {sort_by} {sort_dir}, customer ASC, code ASC, term_code ASC
         LIMIT {limit}
         """.format(
             base=base_group_sql,
@@ -684,25 +706,31 @@ def compute_usa_customer_codes(body):
         glob_list = '[' + ','.join(globs) + ']'
         where_sql = build_where(parsed['sip_codes'], parsed['customer'], parsed['reasons'])
         sql = """
-    SELECT
-      COALESCE(orig_trunk_group_name, '(none)') AS customer,
-      substring(to_did, 2, 6) AS code,
-      COALESCE(term_state, '?') AS state,
-      COALESCE(term_ratecenter, '?') AS ratecenter,
-      ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
-      ANY_VALUE(COALESCE(NULLIF(stir_attest, ''), '?')) AS attest,
-      COUNT(*) AS attempts,
-      COUNT(*) FILTER (WHERE sip_code = 200) AS completions,
-      ROUND(100.0 * COUNT(*) FILTER (WHERE sip_code = 200) / NULLIF(COUNT(*), 0), 2) AS asr_pct,
-      ROUND(SUM(orig_billed_duration) FILTER (WHERE sip_code = 200) / 60.0, 2) AS minutes,
-      ROUND(SUM(orig_cost), 4) AS revenue,
-      ROUND(SUM(term_cost), 4) AS cost,
-      ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
-    FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'stir_x5u': 'VARCHAR', 'stir_attest': 'VARCHAR', 'stir_orig_id': 'VARCHAR', 'stir_orig_tn': 'VARCHAR', 'stir_dest_tn': 'VARCHAR', 'p_charge_info': 'VARCHAR'}})
-    WHERE {where}
-    GROUP BY customer, code, state, ratecenter
-    ORDER BY revenue DESC
-    """.format(glob=glob_list, where=where_sql)
+        SELECT
+          COALESCE(orig_trunk_group_name, '(none)') AS customer,
+          {origin_code} AS code,
+          {termination_code} AS term_code,
+          COALESCE(term_state, '?') AS state,
+          COALESCE(term_ratecenter, '?') AS ratecenter,
+          ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
+          ANY_VALUE(COALESCE(NULLIF(stir_attest, ''), '?')) AS attest,
+          COUNT(*) AS attempts,
+          COUNT(*) FILTER (WHERE sip_code = 200) AS completions,
+          ROUND(100.0 * COUNT(*) FILTER (WHERE sip_code = 200) / NULLIF(COUNT(*), 0), 2) AS asr_pct,
+          ROUND(SUM(orig_billed_duration) FILTER (WHERE sip_code = 200) / 60.0, 2) AS minutes,
+          ROUND(SUM(orig_cost), 4) AS revenue,
+          ROUND(SUM(term_cost), 4) AS cost,
+          ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'stir_x5u': 'VARCHAR', 'stir_attest': 'VARCHAR', 'stir_orig_id': 'VARCHAR', 'stir_orig_tn': 'VARCHAR', 'stir_dest_tn': 'VARCHAR', 'p_charge_info': 'VARCHAR'}})
+        WHERE {where}
+        GROUP BY customer, code, term_code, state, ratecenter
+        ORDER BY revenue DESC
+        """.format(
+            origin_code=ORIG_BILLED_CODE_SQL,
+            termination_code=TERM_BILLED_CODE_SQL,
+            glob=glob_list,
+            where=where_sql,
+        )
         rows, err = run_duckdb(sql, timeout=600)
     if err is not None:
         return {'error': err, 'sql': sql, '_http_status': 400}
@@ -1068,7 +1096,8 @@ def build_customer_codes_export_sql(parsed, use_db):
     grouped_sql = """
       SELECT
         COALESCE(orig_trunk_group_name, '(none)') AS origin_trunk,
-        substring(to_did, 2, 6) AS code,
+        {origin_code} AS code,
+        {termination_code} AS term_code,
         COALESCE(term_state, '?') AS state,
         COALESCE(term_ratecenter, '?') AS ratecenter,
         ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
@@ -1082,8 +1111,13 @@ def build_customer_codes_export_sql(parsed, use_db):
         ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
       FROM {source}
       WHERE {where}
-      GROUP BY origin_trunk, code, state, ratecenter
-    """.format(source=source_sql, where=where_sql)
+      GROUP BY origin_trunk, code, term_code, state, ratecenter
+    """.format(
+        origin_code=ORIG_BILLED_CODE_SQL,
+        termination_code=TERM_BILLED_CODE_SQL,
+        source=source_sql,
+        where=where_sql,
+    )
 
     row_filter = ''
     if parsed['quick_filter'] == 'fas-suspect':
@@ -1096,11 +1130,11 @@ def build_customer_codes_export_sql(parsed, use_db):
         sort_by = 'origin_trunk'
     sql = """
       SELECT
-        origin_trunk, code, state, ratecenter, x5u_url, attest,
+        origin_trunk, code, term_code, state, ratecenter, x5u_url, attest,
         attempts, completions, asr_pct, minutes, revenue, cost, margin
       FROM ({grouped}) grouped
       {row_filter}
-      ORDER BY {sort_by} {sort_dir}, origin_trunk ASC, code ASC
+      ORDER BY {sort_by} {sort_dir}, origin_trunk ASC, code ASC, term_code ASC
     """.format(
         grouped=grouped_sql,
         row_filter=row_filter,
@@ -1210,7 +1244,7 @@ def api_usa_codes_csv():
     result, export_error = prepare_export(body, compute_usa_codes)
     if export_error:
         return jsonify(export_error[0]), export_error[1]
-    cols = ['code', 'state', 'ratecenter', 'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin']
+    cols = ['code', 'term_code', 'state', 'ratecenter', 'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin']
     sd = body.get('start_date', ''); ed = body.get('end_date', sd)
     fn = 'cdr_usa_codes_{}_to_{}.csv'.format(sd, ed)
     return csv_response(result.get('rows') or [], cols, fn)

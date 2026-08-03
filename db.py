@@ -36,6 +36,8 @@ TYPE_OVERRIDES = {
     'callid': 'VARCHAR',
     'orig_carrier_id': 'VARCHAR',
     'term_carrier_id': 'VARCHAR',
+    'orig_billed_prefix': 'VARCHAR',
+    'term_billed_prefix': 'VARCHAR',
     'stir_x5u': 'VARCHAR',
     'stir_attest': 'VARCHAR',
     'stir_orig_id': 'VARCHAR',

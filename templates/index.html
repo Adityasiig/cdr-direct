@@ -189,7 +189,7 @@
     <section class="table-card card view-code" id="table-card">
       <div class="table-toolbar">
         <span class="row-count"><strong id="row-count">0</strong> rows</span>
-        <input type="text" id="filter-input" placeholder="Filter loaded rows (code, state, ratecenter, origin trunk)…">
+        <input type="text" id="filter-input" placeholder="Filter loaded rows (origin prefix, termination prefix, state, ratecenter, origin trunk)…">
         <button id="btn-csv" class="btn-secondary">Export CSV</button>
       </div>
       <div class="table-scroll" id="table-scroll">
@@ -197,7 +197,8 @@
           <thead>
             <tr id="head-row">
               <th data-sort="customer" class="col-customer">Origin trunk</th>
-              <th data-sort="code">Code</th>
+              <th data-sort="code">Origin billed prefix</th>
+              <th data-sort="term_code">Termination billed prefix</th>
               <th data-sort="state">State</th>
               <th data-sort="ratecenter">Ratecenter</th>
               <th data-sort="x5u_url">STIR X5U</th>
@@ -212,7 +213,7 @@
             </tr>
           </thead>
           <tbody id="results-body">
-            <tr><td colspan="13" class="muted center">No data yet — pick a date and click <strong>Run query</strong> (or enable ⚡ Auto)</td></tr>
+            <tr><td colspan="14" class="muted center">No data yet — pick a date and click <strong>Run query</strong> (or enable ⚡ Auto)</td></tr>
           </tbody>
         </table>
       </div>
