@@ -19,6 +19,31 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // ─── Browser localStorage cache (instant repeat render) ─────
+  const LOCAL_CACHE_KEY = 'cdr_customer_state_cache_v1';
+  const LOCAL_CACHE_MAX = 12;
+  const bodyKey = (b) => JSON.stringify({
+    d: b.start_date + '~' + b.end_date,
+    e: (b.entities || []).slice().sort().join(','),
+    s: b.state_side || 'orig',
+    c: b.customer || '',
+  });
+  function lcRead() {
+    try { return JSON.parse(localStorage.getItem(LOCAL_CACHE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function lcGet(b) { return lcRead()[bodyKey(b)] || null; }
+  function lcPut(b, resp) {
+    const all = lcRead();
+    all[bodyKey(b)] = { savedAt: Date.now(), response: resp };
+    const keys = Object.keys(all);
+    if (keys.length > LOCAL_CACHE_MAX) {
+      keys.sort((x, y) => (all[x].savedAt || 0) - (all[y].savedAt || 0));
+      while (keys.length > LOCAL_CACHE_MAX) delete all[keys.shift()];
+    }
+    try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+
   // ─── Formatters ─────────────────────────────────────────────
   const fmtInt = (n) => (n == null) ? '—'
     : Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -86,12 +111,23 @@
     return headers;
   }
 
-  async function apiCall(path, body) {
-    const res = await fetch(path, {
-      method: 'POST',
-      headers: apiHeaders(),
-      body: JSON.stringify(body),
-    });
+  async function apiCall(path, body, timeoutMs) {
+    const ctrl = new AbortController();
+    const timer = timeoutMs ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+    let res;
+    try {
+      res = await fetch(path, {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
+      });
+    } catch (e) {
+      if (e.name === 'AbortError') throw new Error('TIMEOUT');
+      throw e;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
     if (res.status === 401) {
       if (!PROXY_AUTH) {
         state.token = '';
@@ -134,7 +170,13 @@
   });
 
   // ─── Run report ─────────────────────────────────────────────
-  async function runReport() {
+  function paint(json) {
+    state.rawRows = json.rows || [];
+    renderTotals(json.totals || {});
+    applyFilter();
+  }
+
+  async function runReport(force) {
     if (!ensureToken()) return;
     if (state.entities.size === 0) { setStatus('Select at least one entity', 'error'); return; }
 
@@ -147,20 +189,34 @@
       sort_by: state.sortKey,
       sort_dir: state.sortDir,
     };
+    if (force) body.force_refresh = true;
 
-    setStatus('Running…', 'loading');
+    // Instant repaint from browser cache, then revalidate in background.
+    const cached = !force && lcGet(body);
+    if (cached) {
+      paint(cached.response);
+      const age = Math.round((Date.now() - cached.savedAt) / 1000);
+      setStatus('✓ ' + state.rawRows.length.toLocaleString() + ' rows (cached ' + age + 's ago) · refreshing…', 'success');
+    } else {
+      setStatus('Running… first run for this window computes on the server (can take a minute); repeats are instant.', 'loading');
+    }
+
     $('btn-run').disabled = true;
     try {
       const t0 = performance.now();
-      const json = await apiCall('/api/usa-customer-state', body);
+      const json = await apiCall('/api/usa-customer-state', body, 95000);
       const ms = Math.round(performance.now() - t0);
-      state.rawRows = json.rows || [];
-      renderTotals(json.totals || {});
-      applyFilter();
-      const cache = json._cache && json._cache.hit ? ' · cached' : '';
-      setStatus('✓ ' + state.rawRows.length.toLocaleString() + ' rows in ' + ms + ' ms' + cache, 'success');
+      lcPut(body, json);
+      paint(json);
+      const hit = json._cache && json._cache.hit ? ' · server cache' : '';
+      setStatus('✓ ' + state.rawRows.length.toLocaleString() + ' rows in ' + ms + ' ms' + hit, 'success');
     } catch (e) {
-      if (!/^401/.test(e.message)) setStatus('✗ ' + e.message, 'error');
+      if (/^401/.test(e.message)) { /* modal shown */ }
+      else if (e.message === 'TIMEOUT') {
+        setStatus('Still computing on the server (large window). It keeps running in the background — click Run again in ~30s and it will be cached & instant.' + (cached ? ' Showing last cached result meanwhile.' : ''), cached ? 'success' : 'error');
+      } else if (!cached) {
+        setStatus('✗ ' + e.message, 'error');
+      }
     } finally {
       $('btn-run').disabled = false;
     }
@@ -262,7 +318,7 @@
     setStatus('Downloaded ' + rows.length.toLocaleString() + ' rows as CSV', 'success');
   });
 
-  $('btn-run').addEventListener('click', runReport);
+  $('btn-run').addEventListener('click', () => runReport());
   $('window-label').textContent = 'yesterday (UTC)';
 
   // ─── Boot ───────────────────────────────────────────────────
