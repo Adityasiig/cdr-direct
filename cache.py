@@ -15,7 +15,9 @@ from settings import CACHE_DB, MAX_RESULT_ROWS
 # Bump whenever the shape or meaning of report rows changes. Version 3 makes
 # `code` the exact origin billed prefix and adds the independent termination
 # billed prefix as `term_code`, so cached destination-derived rows are invalid.
-CACHE_KEY_VERSION = 3
+# Version 4: customer x state now derives `state` from the billed-prefix NPA
+# instead of the ANI/raw switch column, so cached ANI-derived rows are invalid.
+CACHE_KEY_VERSION = 4
 DAILY_SNAPSHOT_ENTITIES = (
     'MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall',
 )
