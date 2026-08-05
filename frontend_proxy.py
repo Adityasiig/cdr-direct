@@ -32,6 +32,7 @@ MAX_REQUEST_BYTES = max(1024, int(os.environ.get('CDR_PROXY_MAX_REQUEST_BYTES', 
 ALLOWED_API_ROUTES = {
     ('POST', '/api/usa-codes'),
     ('POST', '/api/usa-customer-codes'),
+    ('POST', '/api/usa-customer-state'),
     ('POST', '/api/usa-customer-codes/csv'),
     ('POST', '/api/usa-customer-codes/csv-ticket'),
     ('GET', '/api/usa-customer-codes/csv'),
@@ -137,6 +138,11 @@ def root():
 @app.route('/ui', methods=['GET'])
 def ui():
     return render_template('index.html', auth_mode='proxy')
+
+
+@app.route('/customer-state', methods=['GET'])
+def customer_state_page():
+    return render_template('customer_state.html', auth_mode='proxy')
 
 
 def _proxy_response(upstream):

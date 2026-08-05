@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="cdr-auth-mode" content="{{ auth_mode|default('token') }}">
+  <title>Customer × State | 46labs</title>
+  <link rel="stylesheet" href="/static/style.css?v=15">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-mark">46</span>
+      <div>
+        <h1>Customer × State</h1>
+        <span class="brand-subtitle">who sends traffic from where</span>
+      </div>
+    </div>
+    <div class="env-tag">
+      <strong>USA per-state</strong>
+      <span class="pill" id="window-label">—</span>
+    </div>
+    <div class="header-actions">
+      <a class="link" href="/ui" title="Back to the per-code dashboard">← CDR Reports</a>
+      <button id="btn-logout" class="link" title="Forget stored token">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="filters card">
+      <div class="section-heading">
+        <div>
+          <h2>Traffic by customer &amp; state</h2>
+          <p>Pick a window, choose origination or destination geography, then run.</p>
+        </div>
+      </div>
+      <div class="row">
+
+        <div class="field">
+          <label>Date range</label>
+          <div class="input-row">
+            <input type="date" id="start-date">
+            <span class="muted" style="font-size:0.78rem;">→</span>
+            <input type="date" id="end-date">
+          </div>
+          <div class="preset-bar" id="date-presets">
+            <button class="preset" data-preset="today">Today</button>
+            <button class="preset active" data-preset="yesterday">Yesterday</button>
+            <button class="preset" data-preset="last3">Last 3d</button>
+            <button class="preset" data-preset="last7">Last 7d</button>
+            <button class="preset" data-preset="last30">Last 30d</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Geography</label>
+          <div class="chip-group" id="side-chips">
+            <button class="chip active" data-side="orig" title="Where the customer sends FROM (orig_state)">Origination</button>
+            <button class="chip" data-side="term" title="Where the call terminates TO (term_state)">Destination</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Entities</label>
+          <div class="chip-group" id="entity-chips">
+            <button class="chip active" data-entity="MyCallConnect">MCC</button>
+            <button class="chip active" data-entity="SalamTalk">ST</button>
+            <button class="chip active" data-entity="Dialphone">DP</button>
+            <button class="chip active" data-entity="Vestacall">VC</button>
+          </div>
+        </div>
+
+        <div class="field grow">
+          <label for="customer-search">Origin trunk (optional)</label>
+          <input type="text" id="customer-search" placeholder="All — or type an exact trunk name" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label>&nbsp;</label>
+          <button id="btn-run" class="btn-primary">Run report</button>
+        </div>
+
+      </div>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section class="headline">
+      <div class="stat-card">
+        <span class="stat-label">Customers</span>
+        <span class="stat-value" id="stat-customers">—</span>
+        <span class="stat-sub">distinct trunks</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">States</span>
+        <span class="stat-value" id="stat-states">—</span>
+        <span class="stat-sub">distinct states</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Attempts</span>
+        <span class="stat-value" id="stat-attempts">—</span>
+        <span class="stat-sub">total inbound</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Minutes</span>
+        <span class="stat-value" id="stat-minutes">—</span>
+        <span class="stat-sub">billed (completed)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Revenue</span>
+        <span class="stat-value" id="stat-revenue">—</span>
+        <span class="stat-sub">customer billing</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Margin</span>
+        <span class="stat-value" id="stat-margin">—</span>
+        <span class="stat-sub">profit / loss</span>
+      </div>
+    </section>
+
+    <section class="table-card card" id="table-card">
+      <div class="table-toolbar">
+        <span class="row-count"><strong id="row-count">0</strong> rows</span>
+        <input type="text" id="filter-input" placeholder="Filter loaded rows (state or customer)…">
+        <button id="btn-csv" class="btn-secondary">Export CSV</button>
+      </div>
+      <div class="table-scroll" id="table-scroll">
+        <table id="results-table">
+          <thead>
+            <tr id="head-row">
+              <th data-sort="state">State</th>
+              <th data-sort="customer">Origin trunk (customer)</th>
+              <th data-sort="attempts" class="num">Attempts</th>
+              <th data-sort="completions" class="num">Completions</th>
+              <th data-sort="asr_pct" class="num">ASR %</th>
+              <th data-sort="minutes" class="num">Minutes</th>
+              <th data-sort="revenue" class="num">Revenue</th>
+              <th data-sort="cost" class="num">Cost</th>
+              <th data-sort="margin" class="num">Margin</th>
+            </tr>
+          </thead>
+          <tbody id="results-body">
+            <tr><td colspan="9" class="muted center">No data yet — pick a date and click <strong>Run report</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="token-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Authentication required</h2>
+      <p>Paste your <code>X-Auth-Token</code> for the cdr-direct API. Stored in this browser's localStorage only.</p>
+      <input type="password" id="token-input" placeholder="OTyour…" autocomplete="off">
+      <div class="modal-buttons">
+        <button id="btn-token-save" class="btn-primary">Save &amp; continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/customer_state.js?v=1"></script>
+</body>
+</html>

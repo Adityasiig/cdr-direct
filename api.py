@@ -882,6 +882,128 @@ def compute_stir_x5u(body):
     return {'totals': totals, 'rows': rows, 'row_count': len(rows), 'total_row_count': total_row_count}
 
 
+STATE_SORT_FIELDS = {
+    'customer', 'state', 'attempts', 'completions', 'asr_pct',
+    'minutes', 'revenue', 'cost', 'margin',
+}
+
+
+def compute_customer_state(body):
+    """Per-(customer, US state) traffic volume: which origin trunk sends how much
+    from/to each state.
+
+    `state_side` selects the geography dimension:
+      - 'orig' (default) groups on orig_state  — where the customer sends FROM
+      - 'term'           groups on term_state  — where the call terminates TO
+
+    DuckDB native when every source hour is ingested; raw .csv.gz fallback
+    otherwise. Cardinality is small (customers × ~50 states), so a single
+    grouped query is used instead of the split totals/top pattern.
+    """
+    parsed, err = validate_body(body)
+    if err:
+        return {**err[0], '_http_status': err[1]}
+
+    side = str(body.get('state_side') or 'orig').lower()
+    if side not in ('orig', 'term'):
+        side = 'orig'
+    state_col = 'orig_state' if side == 'orig' else 'term_state'
+
+    sort_by = parsed['sort_by'] if parsed['sort_by'] in STATE_SORT_FIELDS else 'minutes'
+    sort_dir = 'ASC' if parsed['sort_dir'] == 'asc' else 'DESC'
+
+    select_body = """
+      COALESCE(orig_trunk_group_name, '(none)') AS customer,
+      COALESCE(NULLIF(trim({state_col}), ''), '?') AS state,
+      COUNT(*) AS attempts,
+      COUNT(*) FILTER (WHERE sip_code = 200) AS completions,
+      ROUND(100.0 * COUNT(*) FILTER (WHERE sip_code = 200) / NULLIF(COUNT(*), 0), 2) AS asr_pct,
+      ROUND(SUM(orig_billed_duration) FILTER (WHERE sip_code = 200) / 60.0, 2) AS minutes,
+      ROUND(SUM(orig_cost), 4) AS revenue,
+      ROUND(SUM(term_cost), 4) AS cost,
+      ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
+    """.format(state_col=state_col)
+
+    use_db = all_entities_days_in_db(
+        parsed['entities'], parsed['start_date'], parsed['end_date'],
+    )
+
+    if use_db:
+        where_sql = build_db_where(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['sip_codes'], parsed['customer'],
+            parsed['start_hour'], parsed['end_hour'],
+            reasons=parsed['reasons'],
+        )
+        sql = """
+        SELECT {select}
+        FROM cdr_records
+        WHERE {where}
+        GROUP BY customer, state
+        ORDER BY {sort_by} {sort_dir}, customer ASC, state ASC
+        LIMIT {limit}
+        """.format(
+            select=select_body, where=where_sql,
+            sort_by=sort_by, sort_dir=sort_dir, limit=parsed['limit'],
+        )
+        rows, err = db.run_query(sql, timeout=300)
+    else:
+        globs = build_csv_glob(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['start_hour'], parsed['end_hour'],
+        )
+        if not globs:
+            return {'error': 'no entities matched ENTITIES whitelist', '_http_status': 400}
+        glob_list = '[' + ','.join(globs) + ']'
+        where_sql = build_where(parsed['sip_codes'], parsed['customer'], parsed['reasons'])
+        sql = """
+        SELECT {select}
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'stir_x5u': 'VARCHAR', 'stir_attest': 'VARCHAR', 'stir_orig_id': 'VARCHAR', 'stir_orig_tn': 'VARCHAR', 'stir_dest_tn': 'VARCHAR', 'p_charge_info': 'VARCHAR'}})
+        WHERE {where}
+        GROUP BY customer, state
+        ORDER BY {sort_by} {sort_dir}, customer ASC, state ASC
+        LIMIT {limit}
+        """.format(
+            select=select_body, glob=glob_list, where=where_sql,
+            sort_by=sort_by, sort_dir=sort_dir, limit=parsed['limit'],
+        )
+        rows, err = run_duckdb(sql, timeout=600)
+
+    if err is not None:
+        return {'error': err, 'sql': sql, '_http_status': 400}
+
+    rows = rows or []
+    totals = {'attempts': 0, 'completions': 0, 'minutes': 0.0,
+              'revenue': 0.0, 'cost': 0.0, 'margin': 0.0}
+    seen_customers, seen_states = set(), set()
+    for r in rows:
+        totals['attempts'] += r.get('attempts') or 0
+        totals['completions'] += r.get('completions') or 0
+        totals['minutes'] += r.get('minutes') or 0
+        totals['revenue'] += r.get('revenue') or 0
+        totals['cost'] += r.get('cost') or 0
+        totals['margin'] += r.get('margin') or 0
+        if r.get('customer'):
+            seen_customers.add(r['customer'])
+        if r.get('state'):
+            seen_states.add(r['state'])
+    totals['minutes'] = round(totals['minutes'], 2)
+    totals['revenue'] = round(totals['revenue'], 4)
+    totals['cost'] = round(totals['cost'], 4)
+    totals['margin'] = round(totals['margin'], 4)
+    totals['asr_pct'] = round(100.0 * totals['completions'] / totals['attempts'], 2) if totals['attempts'] else 0
+    totals['customer_count'] = len(seen_customers)
+    totals['state_count'] = len(seen_states)
+
+    return {
+        'totals': totals,
+        'state_side': side,
+        'rows': rows,
+        'row_count': len(rows),
+        'total_row_count': len(rows),
+    }
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'ok': True, 'service': 'cdr-direct'})
@@ -908,6 +1030,11 @@ def root():
 @app.route('/ui', methods=['GET'])
 def ui():
     return render_template('index.html')
+
+
+@app.route('/customer-state', methods=['GET'])
+def customer_state_page():
+    return render_template('customer_state.html')
 
 
 @app.route('/static/<path:filename>', methods=['GET'])
@@ -964,6 +1091,17 @@ def api_usa_customer_codes():
     body.pop('_export', None)
     force = bool(body.get('force_refresh'))
     result, status = cached_compute('usa-customer-codes', body, compute_usa_customer_codes, force=force)
+    return jsonify(result), status
+
+
+@app.route('/api/usa-customer-state', methods=['POST'])
+def api_usa_customer_state():
+    if not check_auth():
+        return jsonify({'error': 'unauthorized'}), 401
+    body = request.get_json(force=True, silent=True) or {}
+    body.pop('_export', None)
+    force = bool(body.get('force_refresh'))
+    result, status = cached_compute('usa-customer-state', body, compute_customer_state, force=force)
     return jsonify(result), status
 
 
