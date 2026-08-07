@@ -403,6 +403,7 @@ def build_insert_sql(source, headers):
         'term_media_ip', 'term_juris', 'term_rate',
         'term_billed_duration', 'term_cost', 'term_state',
         'term_ratecenter', 'term_destination',
+        'billed_prefix',
         'stir_x5u', 'stir_attest', 'mos_min', 'mos_avg', 'mos_max',
     ]
     expressions = [
@@ -442,6 +443,7 @@ def build_insert_sql(source, headers):
         source_text(headers, 'term_state'),
         source_text(headers, 'term_ratecenter'),
         source_text(headers, 'term_destination'),
+        source_text(headers, 'orig_billed_prefix'),
         source_text(headers, 'stir_x5u'),
         source_text(headers, 'stir_attest'),
         source_float(headers, 'mos_min', 32),

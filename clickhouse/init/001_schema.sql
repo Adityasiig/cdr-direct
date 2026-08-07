@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS cdr.raw_cdr
     term_state LowCardinality(String),
     term_ratecenter LowCardinality(String),
     term_destination LowCardinality(String),
+    billed_prefix String,
 
     stir_x5u String,
     stir_attest LowCardinality(String),
