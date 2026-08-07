@@ -42,7 +42,7 @@
         "name": "entity",
         "options": [],
         "query": "SELECT DISTINCT entity FROM cdr.cdr_hourly_media_ip ORDER BY entity",
-        "refresh": 2,
+        "refresh": 1,
         "type": "query"
       },
       {
