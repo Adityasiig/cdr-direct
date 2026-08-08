@@ -2,7 +2,7 @@
   "annotations": {
     "list": []
   },
-  "description": "Per-call CDR detail: start time, ANI/DNIS, customer trunk, SIP code, release reason, billed prefix, state and rate center.",
+  "description": "Per-call CDR detail: start time, ANI/DNIS, customer trunk, SIP code, release reason, billed prefix, state and rate center. Includes SIP reason percentage breakdown.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -12,12 +12,30 @@
   "panels": [
     {
       "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "description": "SIP code + release-reason distribution over the selected window. Percentage = share of total attempts. Respects the CDR Source and Customer Trunk filters; ignores the SIP Code filter so the full breakdown always shows.",
+      "fieldConfig": {
+        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Percentage"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 2}, {"id": "custom.align", "value": "right"}]},
+          {"matcher": {"id": "byName", "options": "Attempts"}, "properties": [{"id": "custom.align", "value": "right"}]}
+        ]
+      },
+      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 0},
+      "id": 2,
+      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"displayName": "Attempts", "desc": true}]},
+      "pluginVersion": "12.4.0",
+      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (), 2) AS `Percentage` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `SIP Reason` ORDER BY `Attempts` DESC LIMIT 200", "refId": "A"}],
+      "title": "Sip reason",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
       "description": "One row per CDR leg in the selected time range. Filter by CDR source, customer trunk and SIP code above.",
       "fieldConfig": {
         "defaults": {"custom": {"align": "auto", "filterable": true}},
         "overrides": []
       },
-      "gridPos": {"h": 24, "w": 24, "x": 0, "y": 0},
+      "gridPos": {"h": 22, "w": 24, "x": 0, "y": 11},
       "id": 1,
       "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true},
       "pluginVersion": "12.4.0",
@@ -42,7 +60,7 @@
         "name": "entity",
         "options": [],
         "query": "SELECT DISTINCT entity FROM cdr.cdr_hourly_media_ip ORDER BY entity",
-        "refresh": 1,
+        "refresh": 2,
         "type": "query"
       },
       {
