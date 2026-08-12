@@ -15,7 +15,7 @@
         "type": "grafana-clickhouse-datasource",
         "uid": "cdr-clickhouse"
       },
-      "description": "Per customer trunk AND termination state: SIP reason breakdown with the NPA-NXX (billed prefix, country code stripped) shown per code. '% of Cust+State' = share of that customer+state's attempts. Customers with no traffic in a state appear as a single 0% '(no traffic)' row so coverage gaps are visible. Heavy unfiltered (per-code grain, 24h ~14M rows); select a Customer Trunk to make it fast. Respects CDR Source and Customer Trunk filters; ignores SIP Code filter.",
+      "description": "Per customer trunk AND termination state: SIP reason breakdown with the raw billed-prefix Codes (e.g. 1304522) shown per code. '% of Cust+State' = share of that customer+state's attempts. Customers with no traffic in a state appear as a single 0% '(no traffic)' row so coverage gaps are visible. Heavy unfiltered (per-code grain, 24h ~14M rows); select a Customer Trunk to make it fast. Respects CDR Source and Customer Trunk filters; ignores SIP Code filter.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -89,7 +89,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "sql",
-          "rawSql": "WITH custs AS (SELECT DISTINCT orig_trunk_group_name AS cust FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND orig_trunk_group_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk)), sts AS (SELECT DISTINCT term_state AS st FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_state) AND $__conditionalAll(entity = ${entity:singlequote}, $entity)), actual AS (SELECT orig_trunk_group_name AS cust, term_state AS st, if(length(billed_prefix)>=7, concat(substring(billed_prefix,2,3),'-',substring(billed_prefix,5,3)),'—') AS npanxx, concat(toString(sip_code),' - ',coalesce(nullIf(reason,''),nullIf(sip_reason,''),'Not provided')) AS rsn, count() AS att FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_state) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY cust, st, npanxx, rsn), tot AS (SELECT cust, st, sum(att) AS t FROM actual GROUP BY cust, st) SELECT g.cust AS `Customer Trunk`, g.st AS `State`, if(a.att=0,'—',a.npanxx) AS `NPA-NXX`, if(a.att=0,'(no traffic)',a.rsn) AS `SIP Reason`, a.att AS `Attempts`, if(tot.t=0, 0, round(100.0*a.att/tot.t,2)) AS `% of Cust+State` FROM (SELECT cust, st FROM custs CROSS JOIN sts) g LEFT JOIN actual a ON g.cust=a.cust AND g.st=a.st LEFT JOIN tot ON g.cust=tot.cust AND g.st=tot.st ORDER BY `Attempts` DESC LIMIT 5000",
+          "rawSql": "WITH custs AS (SELECT DISTINCT orig_trunk_group_name AS cust FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND orig_trunk_group_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk)), sts AS (SELECT DISTINCT term_state AS st FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_state) AND $__conditionalAll(entity = ${entity:singlequote}, $entity)), actual AS (SELECT orig_trunk_group_name AS cust, term_state AS st, if(notEmpty(billed_prefix), billed_prefix, '—') AS code, concat(toString(sip_code),' - ',coalesce(nullIf(reason,''),nullIf(sip_reason,''),'Not provided')) AS rsn, count() AS att FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_state) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY cust, st, code, rsn), tot AS (SELECT cust, st, sum(att) AS t FROM actual GROUP BY cust, st) SELECT g.cust AS `Customer Trunk`, g.st AS `State`, if(a.att=0,'—',a.code) AS `Codes`, if(a.att=0,'(no traffic)',a.rsn) AS `SIP Reason`, a.att AS `Attempts`, if(tot.t=0, 0, round(100.0*a.att/tot.t,2)) AS `% of Cust+State` FROM (SELECT cust, st FROM custs CROSS JOIN sts) g LEFT JOIN actual a ON g.cust=a.cust AND g.st=a.st LEFT JOIN tot ON g.cust=tot.cust AND g.st=tot.st ORDER BY `Attempts` DESC LIMIT 5000",
           "refId": "A"
         }
       ],
@@ -228,6 +228,6 @@
   "timezone": "utc",
   "title": "CDR - Call Detail",
   "uid": "cdr-detail",
-  "version": 7,
+  "version": 8,
   "weekStart": ""
 }
