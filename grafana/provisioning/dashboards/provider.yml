@@ -7,7 +7,7 @@ providers:
     folderUid: cdr-analytics
     type: file
     disableDeletion: true
-    allowUiUpdates: false
+    allowUiUpdates: true
     updateIntervalSeconds: 30
     options:
       # This path is part of the immutable image, not the persistent
