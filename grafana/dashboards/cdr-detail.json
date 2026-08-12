@@ -15,97 +15,6 @@
         "type": "grafana-clickhouse-datasource",
         "uid": "cdr-clickhouse"
       },
-      "description": "Total call attempts per termination state. Respects CDR Source + Customer Trunk filters.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 5,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.8,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "editorType": "sql",
-          "format": 1,
-          "queryType": "sql",
-          "rawSql": "SELECT term_state AS `State`, sum(attempts) AS calls FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_state != '?' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `State` ORDER BY calls DESC LIMIT 60",
-          "refId": "A"
-        }
-      ],
-      "title": "Calls By State",
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "cdr-clickhouse"
-      },
       "description": "Per customer trunk AND termination state (term_state): SIP code + release-reason breakdown. '% of Cust+State' = share of that customer+state combo's total attempts in the window, so you can read 'for this customer in this state, this SIP reason is X%'. Blank State = call never reached termination (routing block, etc). Respects the CDR Source and Customer Trunk filters; ignores the SIP Code filter so the full breakdown always shows.",
       "fieldConfig": {
         "defaults": {
@@ -319,6 +228,6 @@
   "timezone": "utc",
   "title": "CDR - Call Detail",
   "uid": "cdr-detail",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }
