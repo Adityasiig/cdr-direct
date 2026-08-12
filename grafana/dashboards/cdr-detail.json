@@ -11,84 +11,693 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "description": "Total call attempts per termination state. Respects CDR Source + Customer Trunk filters.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.4.0",
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT term_state AS `State`, sum(attempts) AS calls FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_state != '?' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `State` ORDER BY calls DESC LIMIT 60",
+          "refId": "A"
+        }
+      ],
+      "title": "Calls By State",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "description": "SIP code + release-reason share of total attempts. Respects CDR Source + Customer Trunk filters; ignores SIP Code filter.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.0",
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `SIP Reason` ORDER BY `Attempts` DESC LIMIT 15",
+          "refId": "A"
+        }
+      ],
+      "title": "SIP Reason Share",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "description": "Per state: SIP reason breakdown, stacked. Failures only (sip_code != 200). Respects CDR Source + Customer Trunk filters.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.4.0",
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT term_state AS `State`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND sip_code != 200  AND term_state != ''  AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `State`, `SIP Reason` ORDER BY `State`, `Attempts` DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "SIP Reason"
+            ],
+            "keepFields": false
+          }
+        }
+      ],
+      "title": "SIP Reason by State (stacked)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "description": "Per customer trunk: SIP reason breakdown, stacked. Failures only (sip_code != 200). Respects CDR Source + Customer Trunk filters.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 8,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "horizontal",
+        "showValue": "never",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.4.0",
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT orig_trunk_group_name AS `Customer Trunk`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND sip_code != 200  AND orig_trunk_group_name != ''  AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `Customer Trunk`, `SIP Reason` ORDER BY `Customer Trunk`, `Attempts` DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "SIP Reason"
+            ],
+            "keepFields": false
+          }
+        }
+      ],
+      "title": "SIP Reason by Customer Trunk (stacked)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "SIP code + release-reason distribution over the selected window. Percentage = share of total attempts. Respects the CDR Source and Customer Trunk filters; ignores the SIP Code filter so the full breakdown always shows.",
       "fieldConfig": {
-        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
         "overrides": [
-          {"matcher": {"id": "byName", "options": "Percentage"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 2}, {"id": "custom.align", "value": "right"}]},
-          {"matcher": {"id": "byName", "options": "Attempts"}, "properties": [{"id": "custom.align", "value": "right"}]}
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Percentage"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Attempts"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          }
         ]
       },
-      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 0},
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 2,
-      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"displayName": "Attempts", "desc": true}]},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Attempts",
+            "desc": true
+          }
+        ]
+      },
       "pluginVersion": "12.4.0",
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (), 2) AS `Percentage` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `SIP Reason` ORDER BY `Attempts` DESC LIMIT 200", "refId": "A"}],
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (), 2) AS `Percentage` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `SIP Reason` ORDER BY `Attempts` DESC LIMIT 200",
+          "refId": "A"
+        }
+      ],
       "title": "Sip reason",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Per customer trunk (orig_trunk_group_name): SIP code + release-reason breakdown. '% of Trunk' = share of that trunk's total attempts in the window, so you can see which trunk is generating a given failure and how heavily. Respects the CDR Source and Customer Trunk filters; ignores the SIP Code filter so the full per-trunk breakdown always shows.",
       "fieldConfig": {
-        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
         "overrides": [
-          {"matcher": {"id": "byName", "options": "% of Trunk"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 2}, {"id": "custom.align", "value": "right"}]},
-          {"matcher": {"id": "byName", "options": "Attempts"}, "properties": [{"id": "custom.align", "value": "right"}]}
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "% of Trunk"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Attempts"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          }
         ]
       },
-      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 11},
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
       "id": 3,
-      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"displayName": "Attempts", "desc": true}]},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Attempts",
+            "desc": true
+          }
+        ]
+      },
       "pluginVersion": "12.4.0",
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT orig_trunk_group_name AS `Customer Trunk`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (PARTITION BY orig_trunk_group_name), 2) AS `% of Trunk` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `Customer Trunk`, `SIP Reason` ORDER BY `Attempts` DESC LIMIT 500", "refId": "A"}],
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT orig_trunk_group_name AS `Customer Trunk`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (PARTITION BY orig_trunk_group_name), 2) AS `% of Trunk` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `Customer Trunk`, `SIP Reason` ORDER BY `Attempts` DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
       "title": "SIP Reason by Customer Trunk",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Per customer trunk AND termination state (term_state): SIP code + release-reason breakdown. '% of Cust+State' = share of that customer+state combo's total attempts in the window, so you can read 'for this customer in this state, this SIP reason is X%'. Blank State = call never reached termination (routing block, etc). Respects the CDR Source and Customer Trunk filters; ignores the SIP Code filter so the full breakdown always shows.",
       "fieldConfig": {
-        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
         "overrides": [
-          {"matcher": {"id": "byName", "options": "% of Cust+State"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 2}, {"id": "custom.align", "value": "right"}]},
-          {"matcher": {"id": "byName", "options": "Attempts"}, "properties": [{"id": "custom.align", "value": "right"}]}
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "% of Cust+State"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              },
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Attempts"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "right"
+              }
+            ]
+          }
         ]
       },
-      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 22},
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
       "id": 4,
-      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"displayName": "Attempts", "desc": true}]},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Attempts",
+            "desc": true
+          }
+        ]
+      },
       "pluginVersion": "12.4.0",
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT orig_trunk_group_name AS `Customer Trunk`, term_state AS `State`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (PARTITION BY orig_trunk_group_name, term_state), 2) AS `% of Cust+State` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `Customer Trunk`, `State`, `SIP Reason` ORDER BY `Attempts` DESC LIMIT 1000", "refId": "A"}],
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT orig_trunk_group_name AS `Customer Trunk`, term_state AS `State`, concat(toString(sip_code), ' - ', coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided')) AS `SIP Reason`, count() AS `Attempts`, round(100.0 * count() / sum(count()) OVER (PARTITION BY orig_trunk_group_name, term_state), 2) AS `% of Cust+State` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY `Customer Trunk`, `State`, `SIP Reason` ORDER BY `Attempts` DESC LIMIT 1000",
+          "refId": "A"
+        }
+      ],
       "title": "SIP Reason by Customer & State",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "One row per CDR leg in the selected time range. Filter by CDR source, customer trunk and SIP code above.",
       "fieldConfig": {
-        "defaults": {"custom": {"align": "auto", "filterable": true}},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
         "overrides": []
       },
-      "gridPos": {"h": 22, "w": 24, "x": 0, "y": 33},
+      "gridPos": {
+        "h": 22,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
       "id": 1,
-      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
       "pluginVersion": "12.4.0",
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT call_start_time AS `Start Time`, from_did AS `ANI`, to_did AS `DNIS`, orig_trunk_group_name AS `Customer Trunk`, sip_code AS `SIP Code`, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, if(billed_prefix = '', '?', billed_prefix) AS `Billed Prefix`, term_state AS `State`, term_ratecenter AS `Rate Center`, entity AS `CDR Source`, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(toString(sip_code) = ${sip_code:singlequote}, $sip_code) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT call_start_time AS `Start Time`, from_did AS `ANI`, to_did AS `DNIS`, orig_trunk_group_name AS `Customer Trunk`, sip_code AS `SIP Code`, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, if(billed_prefix = '', '?', billed_prefix) AS `Billed Prefix`, term_state AS `State`, term_ratecenter AS `Rate Center`, entity AS `CDR Source`, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(toString(sip_code) = ${sip_code:singlequote}, $sip_code) ORDER BY event_time DESC LIMIT 1000",
+          "refId": "A"
+        }
+      ],
       "title": "CDR Detail (latest 1,000)",
       "type": "table"
     }
   ],
   "refresh": "1m",
   "schemaVersion": 41,
-  "tags": ["cdr", "46labs", "cdr-detail", "billed-prefix", "clickhouse"],
+  "tags": [
+    "cdr",
+    "46labs",
+    "cdr-detail",
+    "billed-prefix",
+    "clickhouse"
+  ],
   "templating": {
     "list": [
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT entity FROM cdr.cdr_hourly_media_ip ORDER BY entity",
         "includeAll": true,
         "label": "CDR Source",
@@ -101,8 +710,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT orig_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND orig_trunk_group_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) ORDER BY orig_trunk_group_name",
         "includeAll": true,
         "label": "Customer Trunk",
@@ -115,8 +731,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT toString(sip_code) FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) ORDER BY sip_code",
         "includeAll": true,
         "label": "SIP Code",
@@ -129,11 +752,14 @@
       }
     ]
   },
-  "time": {"from": "now-24h", "to": "now"},
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "utc",
   "title": "CDR - Call Detail",
   "uid": "cdr-detail",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
