@@ -3,6 +3,14 @@ FROM grafana/grafana:12.4.0
 USER root
 RUN grafana cli plugins install grafana-clickhouse-datasource 4.15.0
 
+# Grafana 12.4 enables the `kubernetesDashboards` feature toggle by default,
+# which routes dashboards through the new app-platform storage. That path
+# ignores the classic file-provisioning `allowUiUpdates: true` flag and forces
+# every provisioned dashboard to be read-only in the UI. Disable it so the
+# legacy storage path (which honours allowUiUpdates) is used and provisioned
+# dashboards remain UI-editable.
+RUN printf '\n[feature_toggles]\nkubernetesDashboards = false\n' >> /etc/grafana/grafana.ini
+
 COPY grafana/provisioning/ /etc/grafana/provisioning/
 # Keep provisioned dashboards outside /var/lib/grafana. Coolify mounts the
 # persistent Grafana data volume there, which would otherwise hide dashboard
