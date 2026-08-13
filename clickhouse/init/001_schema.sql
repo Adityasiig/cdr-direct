@@ -207,3 +207,65 @@ GROUP BY
     stir_attest,
     term_state,
     term_ratecenter;
+
+-- ---------------------------------------------------------------------------
+-- SIP-Reason-by-Customer-&-State rollup (per billed_prefix code grain)
+--
+-- Backs the "SIP Reason by Customer & State" panel on the CDR - Call Detail
+-- dashboard. Querying raw_cdr directly at (customer x state x billed_prefix x
+-- sip_code x reason) grain over a 7d window aggregates ~32.7M distinct groups
+-- from ~1.7B rows and OOMs the Grafana read profile (code 241). This hourly
+-- SummingMergeTree collapses the input ~16x so multi-day windows load.
+-- The billed_prefix ("Codes") column is the cardinality driver and is the
+-- reason a dedicated rollup is needed instead of reusing cdr_hourly_media_ip.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS cdr.sip_reason_cust_state_hourly
+(
+    day Date,
+    hour DateTime('UTC'),
+    entity LowCardinality(String),
+    orig_trunk_group_name LowCardinality(String),
+    term_state LowCardinality(String),
+    billed_prefix String,
+    sip_code UInt16,
+    reason LowCardinality(String),
+    attempts UInt64
+)
+ENGINE = SummingMergeTree
+PARTITION BY toYYYYMM(day)
+ORDER BY
+(
+    day,
+    entity,
+    orig_trunk_group_name,
+    term_state,
+    billed_prefix,
+    sip_code,
+    reason,
+    hour
+)
+SETTINGS index_granularity = 8192;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS cdr.sip_reason_cust_state_hourly_mv
+TO cdr.sip_reason_cust_state_hourly
+AS
+SELECT
+    toDate(event_time) AS day,
+    toStartOfHour(event_time) AS hour,
+    entity,
+    orig_trunk_group_name,
+    term_state,
+    billed_prefix,
+    sip_code,
+    if(notEmpty(reason), reason, if(notEmpty(sip_reason), sip_reason, 'Not provided')) AS reason,
+    count() AS attempts
+FROM cdr.raw_cdr
+GROUP BY
+    day,
+    hour,
+    entity,
+    orig_trunk_group_name,
+    term_state,
+    billed_prefix,
+    sip_code,
+    reason;
