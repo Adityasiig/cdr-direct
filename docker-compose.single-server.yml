@@ -106,6 +106,12 @@ services:
     init: true
     restart: unless-stopped
     command: ["python", "clickhouse_ingester.py", "--loop"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://clickhouse:8123/ping', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       CDR_ROOT: /data/raw
       CLICKHOUSE_URL: http://clickhouse:8123
@@ -147,6 +153,12 @@ services:
     init: true
     restart: unless-stopped
     command: ["python", "cache_warmer.py", "--loop"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://cdr-direct:8090/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       CDR_AUTH_TOKEN: "${CDR_AUTH_TOKEN:?Set CDR_AUTH_TOKEN}"
       CDR_API_URL: http://cdr-direct:8090
