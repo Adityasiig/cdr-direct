@@ -6,3 +6,11 @@ RUN mkdir -p /cdr-source/cdr \
 COPY clickhouse/config.d/ /etc/clickhouse-server/config.d/
 COPY clickhouse/init/ /docker-entrypoint-initdb.d/
 COPY clickhouse/users.d/ /etc/clickhouse-server/users.d/
+
+# IP -> ISP lookup source (ip2asn snapshot, "CIDR<TAB>ISP"). Read by the
+# ip_trie dictionary cdr.ip_isp (see clickhouse/init/002_ip_isp_dict.sql).
+# Placed under user_files_path (/cdr-source/) so the FILE() dictionary source
+# is permitted to read it.
+COPY clickhouse/data/ip_isp_cidr.tsv.gz /cdr-source/ip_isp_cidr.tsv.gz
+RUN gunzip -f /cdr-source/ip_isp_cidr.tsv.gz \
+    && chown clickhouse:clickhouse /cdr-source/ip_isp_cidr.tsv
