@@ -11,113 +11,522 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Checks all ingested history, independent of the selected dashboard time range and filters. CLEAR means no watched IP has ever appeared as term_media_ip. ALERT means at least one has appeared. NOT CONFIGURED means the server watchlist is empty.",
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 0,
           "mappings": [
-            {"options": {"-1": {"color": "orange", "index": 0, "text": "NOT CONFIGURED"}, "0": {"color": "green", "index": 1, "text": "CLEAR"}}, "type": "value"},
-            {"options": {"from": 1, "result": {"color": "red", "index": 2, "text": "ALERT"}, "to": 999999}, "type": "range"}
+            {
+              "options": {
+                "-1": {
+                  "color": "orange",
+                  "index": 0,
+                  "text": "NOT CONFIGURED"
+                },
+                "0": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "CLEAR"
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "from": 1,
+                "result": {
+                  "color": "red",
+                  "index": 2,
+                  "text": "ALERT"
+                },
+                "to": 999999
+              },
+              "type": "range"
+            }
           ],
-          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
         },
         "overrides": []
       },
-      "gridPos": {"h": 7, "w": 4, "x": 0, "y": 0},
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "value_and_name"},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "WITH (SELECT count() FROM cdr.termination_media_ip_watchlist) AS configured SELECT multiIf(configured = 0, -1, toInt64(uniqExact(termination_media_ip))) AS `Watched IP Status` FROM cdr.termination_media_ip_watch_hits FINAL", "refId": "A"}],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "WITH (SELECT count() FROM cdr.termination_media_ip_watchlist) AS configured SELECT multiIf(configured = 0, -1, toInt64(uniqExact(termination_media_ip))) AS `Watched IP Status` FROM cdr.termination_media_ip_watch_hits FINAL",
+          "refId": "A"
+        }
+      ],
       "title": "WATCHED IP ALERT",
       "type": "stat"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Every exact route in all ingested history where a watched IP appeared as term_media_ip. This table is independent of dashboard time and route filters.",
-      "fieldConfig": {"defaults": {}, "overrides": [{"matcher": {"id": "byName", "options": "Matching CDRs"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}]},
-      "gridPos": {"h": 7, "w": 20, "x": 4, "y": 0},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Matching CDRs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 20,
+        "x": 4,
+        "y": 0
+      },
       "id": 2,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Last Seen"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT termination_media_ip AS `Termination Media IP`, min(hour) AS `First Seen`, max(hour) AS `Last Seen`, entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, sum(matching_cdrs) AS `Matching CDRs` FROM cdr.termination_media_ip_watch_hits FINAL GROUP BY termination_media_ip, entity, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, term_ip ORDER BY `Last Seen` DESC LIMIT 500", "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Last Seen"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT termination_media_ip AS `Termination Media IP`, min(hour) AS `First Seen`, max(hour) AS `Last Seen`, entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, sum(matching_cdrs) AS `Matching CDRs` FROM cdr.termination_media_ip_watch_hits FINAL GROUP BY termination_media_ip, entity, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, term_ip ORDER BY `Last Seen` DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
       "title": "Watched Termination Media IP Matches",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Latest individual CDRs whose term_media_ip exactly matches the configured watchlist. Uses the 24-hour window ending at the latest detected watched-IP hour so the drill-down stays fast.",
-      "fieldConfig": {"defaults": {}, "overrides": []},
-      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 7},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
       "id": 8,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Call Started"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "WITH (SELECT max(hour) FROM cdr.termination_media_ip_watch_hits FINAL) AS latest_hit_hour SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Customer Trunk`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, trimBoth(term_media_ip) AS `Termination Media IP`, dictGetStringOrDefault('cdr.ip_isp','isp', tuple(IPv4StringToNum(trimBoth(term_media_ip))), 'Unknown') AS `Termination Media ISP`, from_did AS `ANI (From)`, to_did AS `DNIS (To)`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, callid AS `Call ID` FROM cdr.raw_cdr WHERE event_time >= latest_hit_hour - INTERVAL 24 HOUR AND event_time < latest_hit_hour + INTERVAL 1 HOUR AND trimBoth(term_media_ip) IN (SELECT termination_media_ip FROM cdr.termination_media_ip_watchlist) AND $__conditionalAll(trimBoth(term_media_ip) = ${media_ip:singlequote}, $media_ip) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
-      "title": "Watched IP Individual CDRs (latest 1,000)",
-      "type": "table"
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Call Started"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Customer Trunk`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, trimBoth(term_media_ip) AS `Termination Media IP`, dictGetStringOrDefault('cdr.ip_isp','isp', tuple(IPv4StringToNum(trimBoth(term_media_ip))), 'Unknown') AS `Termination Media ISP`, from_did AS `ANI (From)`, to_did AS `DNIS (To)`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND trimBoth(term_media_ip) IN (SELECT termination_media_ip FROM cdr.termination_media_ip_watchlist) AND $__conditionalAll(trimBoth(term_media_ip) = ${media_ip:singlequote}, $media_ip) ORDER BY event_time DESC LIMIT ${row_limit}",
+          "refId": "A"
+        }
+      ],
+      "title": "Watched IP Individual CDRs (latest ${row_limit})",
+      "type": "table",
+      "maxDataPoints": 500000
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "One row is one exact termination route. No vendors, trunks, or IPs are combined into lists.",
-      "fieldConfig": {"defaults": {}, "overrides": [{"matcher": {"id": "byName", "options": "CDRs"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}, {"matcher": {"id": "byName", "options": "Answered"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}, {"matcher": {"id": "byName", "options": "Failed"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}, {"matcher": {"id": "byName", "options": "Answer Rate"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 2}]}]},
-      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 21},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CDRs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Answered"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Answer Rate"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
       "id": 3,
-      "options": {"cellHeight": "sm", "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "CDRs"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, term_media_ip AS `Termination Media IP`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs, sum(completions) AS Answered, sum(attempts) - sum(completions) AS Failed, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `Answer Rate` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY entity, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, term_ip, term_media_ip ORDER BY CDRs DESC LIMIT 1000", "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "CDRs"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, term_media_ip AS `Termination Media IP`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs, sum(completions) AS Answered, sum(attempts) - sum(completions) AS Failed, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `Answer Rate` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY entity, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, term_ip, term_media_ip ORDER BY CDRs DESC LIMIT 1000",
+          "refId": "A"
+        }
+      ],
       "title": "Termination Route Map",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "The most active Termination Media IP routes in the selected time range.",
-      "fieldConfig": {"defaults": {}, "overrides": [{"matcher": {"id": "byName", "options": "CDRs"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}]},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 33},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CDRs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
       "id": 5,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "CDRs"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Trunk`, term_carrier_name AS Vendor, term_trunk_group_name AS `Termination Trunk`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name ORDER BY CDRs DESC LIMIT 50", "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "CDRs"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Trunk`, term_carrier_name AS Vendor, term_trunk_group_name AS `Termination Trunk`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name ORDER BY CDRs DESC LIMIT 50",
+          "refId": "A"
+        }
+      ],
       "title": "Most Used Termination Media IPs",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Non-200 SIP responses grouped by the exact termination route.",
-      "fieldConfig": {"defaults": {}, "overrides": [{"matcher": {"id": "byName", "options": "Failed CDRs"}, "properties": [{"id": "unit", "value": "short"}, {"id": "decimals", "value": 0}]}]},
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 41},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed CDRs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
       "id": 6,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true, "sortBy": [{"desc": true, "displayName": "Failed CDRs"}]},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, sip_code AS `SIP Code`, reason AS `Release Reason`, sum(attempts) AS `Failed CDRs` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND sip_code != 200 AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, sip_code, reason ORDER BY `Failed CDRs` DESC LIMIT 500", "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Failed CDRs"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Customer Trunk`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, sip_code AS `SIP Code`, reason AS `Release Reason`, sum(attempts) AS `Failed CDRs` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND sip_code != 200 AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name, sip_code, reason ORDER BY `Failed CDRs` DESC LIMIT 500",
+          "refId": "A"
+        }
+      ],
       "title": "Failures by Termination Media IP Route",
       "type": "table"
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
       "description": "Individual CDRs with customer-side routing followed by termination-side routing.",
-      "fieldConfig": {"defaults": {}, "overrides": []},
-      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 51},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
       "id": 7,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, orig_carrier_name AS `Customer Carrier`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, term_media_ip AS `Termination Media IP`, dictGetStringOrDefault('cdr.ip_isp','isp', tuple(IPv4StringToNum(trimBoth(term_media_ip))), 'Unknown') AS `Termination Media ISP`, from_did AS `From Number`, to_did AS `To Number`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, duration_real AS `Duration Sec`, orig_billed_duration AS `Billable Sec`, stir_attest AS Attestation, round(mos_avg, 2) AS MOS, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_media_ip) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) ORDER BY event_time DESC LIMIT 1000", "refId": "A"}],
-      "title": "Individual CDRs (latest 1,000)",
-      "type": "table"
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT call_start_time AS `Call Started`, call_end_time AS `Call Ended`, entity AS `CDR Source`, orig_trunk_group_name AS `Incoming Customer Trunk`, orig_carrier_name AS `Customer Carrier`, term_carrier_name AS `Termination Vendor`, term_trunk_group_name AS `Termination Trunk`, term_ip AS `Termination Signaling IP`, term_media_ip AS `Termination Media IP`, dictGetStringOrDefault('cdr.ip_isp','isp', tuple(IPv4StringToNum(trimBoth(term_media_ip))), 'Unknown') AS `Termination Media ISP`, from_did AS `From Number`, to_did AS `To Number`, sip_code AS `SIP Code`, if(sip_code = 200, 'Answered', 'Failed') AS Result, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `Release Reason`, duration_real AS `Duration Sec`, orig_billed_duration AS `Billable Sec`, stir_attest AS Attestation, round(mos_avg, 2) AS MOS, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(term_media_ip) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) ORDER BY event_time DESC LIMIT ${row_limit}",
+          "refId": "A"
+        }
+      ],
+      "title": "Individual CDRs (latest ${row_limit})",
+      "type": "table",
+      "maxDataPoints": 500000
     },
     {
-      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
-      "fieldConfig": {"defaults": {}, "overrides": []},
-      "gridPos": {"h": 7, "w": 24, "x": 0, "y": 65},
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
       "id": 15,
-      "options": {"cellHeight": "sm", "footer": {"show": false}, "showHeader": true},
-      "targets": [{"editorType": "sql", "format": 1, "queryType": "sql", "rawSql": "SELECT entity AS `CDR Source`, file_hour AS `File Hour`, file_path AS File, status AS Status, message AS Message, rows_ingested AS Rows, updated_at AS Updated FROM cdr.ingest_log FINAL WHERE status IN ('error', 'changed') ORDER BY updated_at DESC LIMIT 100", "refId": "A"}],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "sql",
+          "rawSql": "SELECT entity AS `CDR Source`, file_hour AS `File Hour`, file_path AS File, status AS Status, message AS Message, rows_ingested AS Rows, updated_at AS Updated FROM cdr.ingest_log FINAL WHERE status IN ('error', 'changed') ORDER BY updated_at DESC LIMIT 100",
+          "refId": "A"
+        }
+      ],
       "title": "Data Loading Problems (empty means healthy)",
       "type": "table"
     }
   ],
   "refresh": "1m",
   "schemaVersion": 41,
-  "tags": ["cdr", "46labs", "termination-media-ip", "watchlist", "clickhouse"],
+  "tags": [
+    "cdr",
+    "46labs",
+    "termination-media-ip",
+    "watchlist",
+    "clickhouse"
+  ],
   "templating": {
     "list": [
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT entity FROM cdr.cdr_hourly_media_ip ORDER BY entity",
         "includeAll": true,
         "label": "CDR Source",
@@ -130,8 +539,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT orig_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND orig_trunk_group_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) ORDER BY orig_trunk_group_name",
         "includeAll": true,
         "label": "Incoming Customer Trunk",
@@ -144,8 +560,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT term_carrier_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_carrier_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) ORDER BY term_carrier_name",
         "includeAll": true,
         "label": "Termination Vendor",
@@ -158,8 +581,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT term_trunk_group_name FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_trunk_group_name != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) ORDER BY term_trunk_group_name",
         "includeAll": true,
         "label": "Termination Trunk",
@@ -172,8 +602,15 @@
       },
       {
         "allValue": null,
-        "current": {"selected": true, "text": "All", "value": "$__all"},
-        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "cdr-clickhouse"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "cdr-clickhouse"
+        },
         "definition": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) ORDER BY term_media_ip",
         "includeAll": true,
         "label": "Termination Media IP",
@@ -183,10 +620,56 @@
         "query": "SELECT DISTINCT term_media_ip FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) ORDER BY term_media_ip",
         "refresh": 2,
         "type": "query"
+      },
+      {
+        "name": "row_limit",
+        "label": "Max rows",
+        "type": "custom",
+        "hide": 0,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false,
+        "query": "1000,5000,25000,100000,500000",
+        "options": [
+          {
+            "selected": true,
+            "text": "1000",
+            "value": "1000"
+          },
+          {
+            "selected": false,
+            "text": "5000",
+            "value": "5000"
+          },
+          {
+            "selected": false,
+            "text": "25000",
+            "value": "25000"
+          },
+          {
+            "selected": false,
+            "text": "100000",
+            "value": "100000"
+          },
+          {
+            "selected": false,
+            "text": "500000",
+            "value": "500000"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "1000",
+          "value": "1000"
+        },
+        "description": "Row cap for the Individual CDRs tables. Raising this pulls more CDRs per refresh; very large values are slow to render."
       }
     ]
   },
-  "time": {"from": "now-24h", "to": "now"},
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "utc",
   "title": "CDR - Termination Media IP Monitor",
