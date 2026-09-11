@@ -177,17 +177,1046 @@
       },
       "id": 8,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
+        "tables": [
           {
-            "desc": true,
-            "displayName": "Call Started"
+            "name": "CDRs",
+            "items": [
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call Started",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": true,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call Ended",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "CDR Source",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Customer Trunk",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Trunk",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Signaling IP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Media IP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Media ISP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "ANI (From)",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "DNIS (To)",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "SIP Code",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Result",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Release Reason",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call ID",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              }
+            ],
+            "showHeader": true,
+            "expanded": false,
+            "update": {
+              "datasource": "",
+              "payload": {}
+            },
+            "pagination": {
+              "enabled": false,
+              "mode": "client",
+              "defaultPageSize": 100,
+              "query": {}
+            },
+            "rowHighlight": {
+              "enabled": false,
+              "variable": "",
+              "backgroundColor": "transparent",
+              "columnId": "",
+              "scrollTo": "none",
+              "smooth": false
+            },
+            "actionsColumnConfig": {
+              "label": "",
+              "width": {
+                "auto": false,
+                "value": 100
+              },
+              "alignment": "start",
+              "fontSize": "md"
+            },
+            "addRow": {
+              "enabled": false,
+              "permission": {
+                "mode": "",
+                "userRole": []
+              },
+              "request": {
+                "datasource": "",
+                "payload": {}
+              }
+            },
+            "deleteRow": {
+              "enabled": false,
+              "permission": {
+                "mode": "",
+                "userRole": []
+              },
+              "request": {
+                "datasource": "",
+                "payload": {}
+              }
+            }
           }
-        ]
+        ],
+        "tabsSorting": false,
+        "toolbar": {
+          "export": true,
+          "exportFormats": [
+            "xlsx",
+            "csv"
+          ],
+          "alignment": "left"
+        },
+        "saveUserPreference": false,
+        "isColumnManagerAvailable": false,
+        "showFiltersInColumnManager": false,
+        "nestedObjects": [],
+        "externalExport": {
+          "enabled": false
+        }
       },
       "targets": [
         {
@@ -199,8 +1228,9 @@
         }
       ],
       "title": "Watched IP Individual CDRs (latest ${row_limit})",
-      "type": "table",
-      "maxDataPoints": 500000
+      "type": "volkovlabs-table-panel",
+      "maxDataPoints": 500000,
+      "pluginVersion": "3.6.8"
     },
     {
       "datasource": {
@@ -450,11 +1480,1460 @@
       },
       "id": 7,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
+        "tables": [
+          {
+            "name": "CDRs",
+            "items": [
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call Started",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": true,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call Ended",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "CDR Source",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Incoming Customer Trunk",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Customer Carrier",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Vendor",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Trunk",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Signaling IP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Media IP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Termination Media ISP",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "From Number",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "To Number",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "SIP Code",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Result",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Release Reason",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Duration Sec",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Billable Sec",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Attestation",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "MOS",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              },
+              {
+                "enabled": true,
+                "field": {
+                  "name": "Call ID",
+                  "source": "A"
+                },
+                "label": "",
+                "type": "auto",
+                "group": false,
+                "preformattedStyle": false,
+                "scale": "auto",
+                "aggregation": "none",
+                "filter": {
+                  "enabled": true,
+                  "mode": "client",
+                  "variable": ""
+                },
+                "sort": {
+                  "descFirst": false,
+                  "enabled": true
+                },
+                "showingRows": 20,
+                "appearance": {
+                  "wrap": true,
+                  "alignment": "start",
+                  "width": {
+                    "auto": true,
+                    "min": 20,
+                    "value": 100
+                  },
+                  "header": {
+                    "fontSize": "md"
+                  },
+                  "colors": {},
+                  "background": {
+                    "applyToRow": false
+                  }
+                },
+                "footer": [],
+                "edit": {
+                  "enabled": false,
+                  "permission": {
+                    "mode": "",
+                    "userRole": []
+                  },
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "newRowEdit": {
+                  "enabled": false,
+                  "editor": {
+                    "type": "string"
+                  }
+                },
+                "pin": "",
+                "objectId": "",
+                "columnTooltip": "",
+                "gauge": {
+                  "mode": "basic",
+                  "valueDisplayMode": "text",
+                  "valueSize": 14
+                },
+                "fileCell": {
+                  "text": "Download",
+                  "size": "md",
+                  "variant": "primary"
+                }
+              }
+            ],
+            "showHeader": true,
+            "expanded": false,
+            "update": {
+              "datasource": "",
+              "payload": {}
+            },
+            "pagination": {
+              "enabled": false,
+              "mode": "client",
+              "defaultPageSize": 100,
+              "query": {}
+            },
+            "rowHighlight": {
+              "enabled": false,
+              "variable": "",
+              "backgroundColor": "transparent",
+              "columnId": "",
+              "scrollTo": "none",
+              "smooth": false
+            },
+            "actionsColumnConfig": {
+              "label": "",
+              "width": {
+                "auto": false,
+                "value": 100
+              },
+              "alignment": "start",
+              "fontSize": "md"
+            },
+            "addRow": {
+              "enabled": false,
+              "permission": {
+                "mode": "",
+                "userRole": []
+              },
+              "request": {
+                "datasource": "",
+                "payload": {}
+              }
+            },
+            "deleteRow": {
+              "enabled": false,
+              "permission": {
+                "mode": "",
+                "userRole": []
+              },
+              "request": {
+                "datasource": "",
+                "payload": {}
+              }
+            }
+          }
+        ],
+        "tabsSorting": false,
+        "toolbar": {
+          "export": true,
+          "exportFormats": [
+            "xlsx",
+            "csv"
+          ],
+          "alignment": "left"
         },
-        "showHeader": true
+        "saveUserPreference": false,
+        "isColumnManagerAvailable": false,
+        "showFiltersInColumnManager": false,
+        "nestedObjects": [],
+        "externalExport": {
+          "enabled": false
+        }
       },
       "targets": [
         {
@@ -466,8 +2945,9 @@
         }
       ],
       "title": "Individual CDRs (latest ${row_limit})",
-      "type": "table",
-      "maxDataPoints": 500000
+      "type": "volkovlabs-table-panel",
+      "maxDataPoints": 500000,
+      "pluginVersion": "3.6.8"
     },
     {
       "datasource": {
