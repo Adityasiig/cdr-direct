@@ -108,6 +108,9 @@
     rowCount: $('row-count'),
     filterInput: $('filter-input'),
     tableCard: $('table-card'),
+    durationCard: $('duration-card'),
+    durationBars: $('duration-bars'),
+    durAcd: $('dur-acd'),
     tableScroll: $('table-scroll'),
     tableBody: $('results-body'),
     tableHead: $$('#results-table th'),
@@ -324,6 +327,7 @@
     state.rawRows = [];
     renderTable();
     renderStats({});
+    el.durationCard.style.display = 'none';
     setStatus('Logged out.', '');
     ensureToken();
   });
@@ -664,6 +668,43 @@
     }
   }
 
+  // ─── Call-duration distribution ────────────────────────────
+  function renderDuration(data) {
+    const buckets = (data && data.buckets) || [];
+    const totals = (data && data.totals) || {};
+    if (!buckets.length || !totals.calls) {
+      el.durationCard.style.display = 'none';
+      return;
+    }
+    const maxPct = Math.max.apply(null, buckets.map((b) => b.pct || 0)) || 1;
+    el.durAcd.textContent =
+      'ACD ' + fmtNum(totals.acd_seconds, 1) + 's · ' +
+      fmtInt(totals.calls) + ' calls · ' + fmtNum(totals.minutes, 2) + ' min';
+    el.durationBars.innerHTML = buckets.map((b) =>
+      '<div class="dur-row">' +
+        '<span class="dur-label">' + b.label + '</span>' +
+        '<span class="dur-track"><span class="dur-fill" style="width:' +
+          Math.max(2, (b.pct / maxPct) * 100).toFixed(1) + '%"></span></span>' +
+        '<span class="dur-val">' + fmtInt(b.calls) + ' <span class="muted">(' +
+          fmtNum(b.pct, 1) + '%)</span></span>' +
+      '</div>'
+    ).join('');
+    el.durationCard.style.display = '';
+  }
+
+  async function fetchDuration(body) {
+    try {
+      const dbody = Object.assign({}, body);
+      delete dbody._endpoint;
+      delete dbody.force_refresh;
+      const r = await apiCall('/api/usa-duration', dbody, { noRetry: true });
+      renderDuration(r.json);
+    } catch (e) {
+      // Non-fatal — duration is a supplementary panel.
+      el.durationCard.style.display = 'none';
+    }
+  }
+
   // ─── Filter + sort + render ────────────────────────────────
   function applyFilter() {
     const q = (el.filterInput.value || '').trim().toLowerCase();
@@ -941,6 +982,9 @@
       // Save to local browser cache for next page load
       localCachePut(body, r.json);
       state.localCacheUsed = false;
+
+      // Supplementary call-duration panel — fire-and-forget, non-blocking.
+      fetchDuration(body);
 
       // Cache metadata + pill update
       state.lastCacheMeta = r.json._cache || null;

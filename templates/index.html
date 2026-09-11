@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="cdr-auth-mode" content="{{ auth_mode|default('token') }}">
   <title>CDR Reports | 46labs</title>
-  <link rel="stylesheet" href="/static/style.css?v=16">
+  <link rel="stylesheet" href="/static/style.css?v=17">
 </head>
 <body>
   <header>
@@ -187,6 +187,16 @@
       </div>
     </section>
 
+    <section class="duration-card card" id="duration-card" style="display:none">
+      <div class="section-heading">
+        <div>
+          <h2>Call duration</h2>
+          <p>Distribution of completed (SIP 200) calls by talk time · <span id="dur-acd" class="muted">—</span></p>
+        </div>
+      </div>
+      <div class="duration-bars" id="duration-bars"></div>
+    </section>
+
     <section class="table-card card view-code" id="table-card">
       <div class="table-toolbar">
         <span class="row-count"><strong id="row-count">0</strong> rows</span>
@@ -235,6 +245,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=17"></script>
+  <script src="/static/app.js?v=18"></script>
 </body>
 </html>

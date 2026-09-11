@@ -559,6 +559,16 @@ table td.customer {
   .table-scroll { max-height: 55vh; }
 }
 
+/* ─── Call-duration distribution panel ─── */
+.duration-card { margin-bottom: 14px; }
+.duration-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.dur-row { display: grid; grid-template-columns: 68px 1fr 130px; align-items: center; gap: 12px; }
+.dur-label { font-size: 0.82rem; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.dur-track { height: 14px; background: var(--panel-soft); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.dur-fill { display: block; height: 100%; background: var(--blue); border-radius: 3px 0 0 3px; transition: width .3s ease; }
+.dur-val { font-size: 0.82rem; text-align: right; font-variant-numeric: tabular-nums; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; }
+  .dur-fill { transition: none; }
 }

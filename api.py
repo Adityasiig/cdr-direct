@@ -585,6 +585,131 @@ def compute_usa_codes(body):
     return {'totals': totals, 'rows': rows, 'row_count': len(rows), 'total_row_count': total_row_count}
 
 
+# Call-duration histogram buckets (seconds), computed over completed calls (SIP 200).
+# label -> (lower_inclusive, upper_exclusive). None upper = open-ended.
+#
+# Bucketed on duration_real (actual talk time), NOT orig_billed_duration: the
+# switch bills in 6-second increments with a 6s minimum, so a billed-duration
+# histogram collapses every sub-6s call into one bar and reports a 0-6s bucket
+# that is always empty. Minutes stay on orig_billed_duration - that is the
+# billable figure and must tie out with the Minutes headline stat.
+DURATION_BUCKETS = [
+    ('0-6s',   0,    6),
+    ('6-30s',  6,    30),
+    ('30-60s', 30,   60),
+    ('1-2m',   60,   120),
+    ('2-5m',   120,  300),
+    ('5-10m',  300,  600),
+    ('10m+',   600,  None),
+]
+
+
+# Negative duration_real occurs in the raw feed (clock skew between switch
+# legs); clamp so those rows land in the first bucket instead of 'other'.
+DURATION_COL_SQL = 'GREATEST(COALESCE(duration_real, 0), 0)'
+
+
+def _duration_bucket_case_sql():
+    """Build a DuckDB CASE mapping real call duration (secs) -> bucket label."""
+    col = DURATION_COL_SQL
+    whens = []
+    for label, lo, hi in DURATION_BUCKETS:
+        if hi is None:
+            whens.append("WHEN {} >= {} THEN '{}'".format(col, lo, label))
+        else:
+            whens.append(
+                "WHEN {col} >= {lo} AND {col} < {hi} THEN '{label}'".format(
+                    col=col, lo=lo, hi=hi, label=label,
+                )
+            )
+    return "CASE\n          " + "\n          ".join(whens) + "\n          ELSE 'other' END"
+
+
+def compute_usa_duration(body):
+    """
+    Call-duration distribution over completed (SIP 200) USA calls, using the
+    same filters as the main report. Returns per-bucket call counts + minutes,
+    plus totals incl. average call duration (ACD, seconds).
+    """
+    parsed, err = validate_body(body)
+    if err:
+        return {**err[0], '_http_status': err[1]}
+
+    bucket_case = _duration_bucket_case_sql()
+    use_db = all_entities_days_in_db(
+        parsed['entities'], parsed['start_date'], parsed['end_date'],
+    )
+
+    if use_db:
+        where_sql = build_db_where(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['sip_codes'], parsed['customer'],
+            parsed['start_hour'], parsed['end_hour'],
+            reasons=parsed['reasons'],
+        )
+        sql = """
+        SELECT
+          {bucket} AS bucket,
+          COUNT(*) AS calls,
+          ROUND(SUM(orig_billed_duration) / 60.0, 2) AS minutes,
+          SUM({dur}) AS real_seconds
+        FROM cdr_records
+        WHERE {where} AND sip_code = 200
+        GROUP BY bucket
+        """.format(bucket=bucket_case, where=where_sql, dur=DURATION_COL_SQL)
+        rows, err = db.run_query(sql, timeout=600)
+    else:
+        globs = build_csv_glob(
+            parsed['entities'], parsed['start_date'], parsed['end_date'],
+            parsed['start_hour'], parsed['end_hour'],
+        )
+        if not globs:
+            return {'error': 'no entities matched ENTITIES whitelist', '_http_status': 400}
+        glob_list = '[' + ','.join(globs) + ']'
+        where_sql = build_where(parsed['sip_codes'], parsed['customer'], parsed['reasons'])
+        sql = """
+        SELECT
+          {bucket} AS bucket,
+          COUNT(*) AS calls,
+          ROUND(SUM(orig_billed_duration) / 60.0, 2) AS minutes,
+          SUM({dur}) AS real_seconds
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR'}})
+        WHERE {where} AND sip_code = 200
+        GROUP BY bucket
+        """.format(bucket=bucket_case, glob=glob_list, where=where_sql, dur=DURATION_COL_SQL)
+        rows, err = run_duckdb(sql, timeout=600)
+    if err is not None:
+        return {'error': err, 'sql': sql, '_http_status': 400}
+
+    by_label = {r.get('bucket'): r for r in rows}
+    buckets = []
+    total_calls = 0
+    total_minutes = 0.0
+    total_real_seconds = 0.0
+    for label, _lo, _hi in DURATION_BUCKETS:
+        r = by_label.get(label) or {}
+        calls = int(r.get('calls') or 0)
+        minutes = float(r.get('minutes') or 0.0)
+        total_calls += calls
+        total_minutes += minutes
+        total_real_seconds += float(r.get('real_seconds') or 0.0)
+        buckets.append({'label': label, 'calls': calls, 'minutes': round(minutes, 2)})
+
+    for b in buckets:
+        b['pct'] = round(100.0 * b['calls'] / total_calls, 2) if total_calls else 0.0
+
+    # ACD on real talk time; billed minutes run higher due to 6s rounding.
+    acd_seconds = round(total_real_seconds / total_calls, 1) if total_calls else 0.0
+    return {
+        'buckets': buckets,
+        'totals': {
+            'calls': total_calls,
+            'minutes': round(total_minutes, 2),
+            'acd_seconds': acd_seconds,
+        },
+    }
+
+
 def compute_usa_customer_codes(body):
     """Per-(origin trunk, USA-code) — DB native if covered, CSV fallback otherwise."""
     parsed, err = validate_body(body)
@@ -1225,6 +1350,17 @@ def api_usa_customer_state():
     body.pop('_export', None)
     force = bool(body.get('force_refresh'))
     result, status = cached_compute('usa-customer-state', body, compute_customer_state, force=force)
+    return jsonify(result), status
+
+
+@app.route('/api/usa-duration', methods=['POST'])
+def api_usa_duration():
+    if not check_auth():
+        return jsonify({'error': 'unauthorized'}), 401
+    body = request.get_json(force=True, silent=True) or {}
+    body.pop('_export', None)
+    force = bool(body.get('force_refresh'))
+    result, status = cached_compute('usa-duration', body, compute_usa_duration, force=force)
     return jsonify(result), status
 
 
