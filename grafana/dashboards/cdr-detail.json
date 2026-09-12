@@ -154,7 +154,7 @@
         "uid": "cdr-clickhouse"
       },
       "gridPos": {
-        "h": 20,
+        "h": 18,
         "w": 24,
         "x": 0,
         "y": 73
@@ -217,12 +217,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 150
                   },
                   "header": {
                     "fontSize": "md"
@@ -286,12 +286,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 115
                   },
                   "header": {
                     "fontSize": "md"
@@ -355,12 +355,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 115
                   },
                   "header": {
                     "fontSize": "md"
@@ -424,12 +424,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 95
                   },
                   "header": {
                     "fontSize": "md"
@@ -493,12 +493,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 210
                   },
                   "header": {
                     "fontSize": "md"
@@ -562,12 +562,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 185
                   },
                   "header": {
                     "fontSize": "md"
@@ -631,12 +631,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 160
                   },
                   "header": {
                     "fontSize": "md"
@@ -700,12 +700,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 160
                   },
                   "header": {
                     "fontSize": "md"
@@ -769,12 +769,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 105
                   },
                   "header": {
                     "fontSize": "md"
@@ -838,12 +838,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
-                  "alignment": "start",
+                  "wrap": false,
+                  "alignment": "end",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 80
                   },
                   "header": {
                     "fontSize": "md"
@@ -907,12 +907,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 80
                   },
                   "header": {
                     "fontSize": "md"
@@ -976,12 +976,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 150
                   },
                   "header": {
                     "fontSize": "md"
@@ -1045,12 +1045,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
-                  "alignment": "start",
+                  "wrap": false,
+                  "alignment": "end",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 95
                   },
                   "header": {
                     "fontSize": "md"
@@ -1114,12 +1114,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 65
                   },
                   "header": {
                     "fontSize": "md"
@@ -1183,12 +1183,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 120
                   },
                   "header": {
                     "fontSize": "md"
@@ -1252,12 +1252,12 @@
                 },
                 "showingRows": 20,
                 "appearance": {
-                  "wrap": true,
+                  "wrap": false,
                   "alignment": "start",
                   "width": {
-                    "auto": true,
+                    "auto": false,
                     "min": 20,
-                    "value": 100
+                    "value": 290
                   },
                   "header": {
                     "fontSize": "md"
@@ -1356,8 +1356,7 @@
         "toolbar": {
           "export": true,
           "exportFormats": [
-            "xlsx",
-            "csv"
+            "xlsx"
           ],
           "alignment": "left"
         },
