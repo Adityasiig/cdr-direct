@@ -14,3 +14,9 @@ COPY clickhouse/users.d/ /etc/clickhouse-server/users.d/
 COPY clickhouse/data/ip_isp_cidr.tsv.gz /cdr-source/ip_isp_cidr.tsv.gz
 RUN gunzip -f /cdr-source/ip_isp_cidr.tsv.gz \
     && chown clickhouse:clickhouse /cdr-source/ip_isp_cidr.tsv
+
+# Rural NPA-NXX billed prefixes, loaded into cdr.rural_prefix_list by
+# clickhouse/init/003_rural_prefixes.sql. Under user_files_path so file() can
+# read it during init.
+COPY clickhouse/data/rural_prefixes.csv /cdr-source/rural_prefixes.csv
+RUN chown clickhouse:clickhouse /cdr-source/rural_prefixes.csv

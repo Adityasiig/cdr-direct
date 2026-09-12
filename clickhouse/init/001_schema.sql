@@ -269,3 +269,28 @@ GROUP BY
     billed_prefix,
     sip_code,
     reason;
+
+-- Rural NPA-NXX billed prefixes.
+--
+-- Reference list of billed prefixes (7-digit NPA-NXX, e.g. 1775292) that
+-- terminate to rural carriers. Traffic to these prefixes carries different
+-- economics and is worth watching separately, so the CDR Call Detail
+-- dashboard joins against this table to isolate rural calls.
+--
+-- Source data is baked into the image at /cdr-source/rural_prefixes.csv by
+-- Dockerfile.clickhouse (from clickhouse/data/rural_prefixes.csv) and loaded
+-- by 003_rural_prefixes.sql. To change the list, update that CSV and rebuild.
+--
+-- ReplacingMergeTree keyed on billed_prefix so re-running the load is
+-- idempotent rather than duplicating rows.
+CREATE TABLE IF NOT EXISTS cdr.rural_prefix_list
+(
+    billed_prefix  String,
+    effective_date Date,
+    expiry_date    Date,
+    created_at     Date,
+    notes          String DEFAULT '',
+    updated_at     DateTime64(3, 'UTC') DEFAULT now64(3, 'UTC')
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY billed_prefix;
