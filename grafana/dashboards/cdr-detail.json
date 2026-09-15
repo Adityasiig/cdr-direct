@@ -205,6 +205,82 @@
         },
         "showHeader": true
       }
+    },
+    {
+      "id": 29,
+      "type": "row",
+      "title": "Loop Detection",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 93
+      },
+      "panels": []
+    },
+    {
+      "id": 30,
+      "type": "table",
+      "pluginVersion": "12.4.0",
+      "title": "Looping ANI + DNIS across entities (latest ${loop_row_limit})",
+      "description": "Same ANI and DNIS seen on more than one entity inside a short window - the call left one entity and re-entered the network through another instead of terminating. One row per ANI+DNIS pair, worst first by leg count. Tune with the Loop: variables above. Export via the panel menu: Inspect > Data > Download CSV.",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "cdr-clickhouse"
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 24,
+        "x": 0,
+        "y": 94
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "cdr-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "pluginVersion": "4.15.0",
+          "rawSql": "WITH hits AS ( SELECT cityHash64(from_did, to_did) AS pair_hash FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY pair_hash HAVING uniqUpTo(4)(entity) >= ${loop_min_entities} AND count() >= ${loop_min_legs} AND max(event_time) - min(event_time) <= ${loop_window_sec} ORDER BY count() DESC LIMIT ${loop_row_limit}) SELECT from_did AS `ANI`, to_did AS `DNIS`, uniqExact(entity) AS `Entities`, arrayStringConcat(arraySort(groupUniqArray(entity)), ', ') AS `Entity List`, count() AS `Legs`, countIf(sip_code = 200) AS `Answered`, max(event_time) - min(event_time) AS `Span Sec`, uniqExact(orig_trunk_group_name) AS `Cust Trunks`, uniqExact(term_carrier_name) AS `Term Vendors`, min(event_time) AS `First Seen`, max(event_time) AS `Last Seen` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND cityHash64(from_did, to_did) IN (SELECT pair_hash FROM hits) GROUP BY from_did, to_did HAVING uniqExact(entity) >= ${loop_min_entities} ORDER BY `Legs` DESC LIMIT ${loop_row_limit}",
+          "meta": {
+            "builderOptions": {
+              "columns": [],
+              "database": "cdr",
+              "limit": 0,
+              "mode": "list",
+              "queryType": "table",
+              "table": "raw_cdr"
+            }
+          }
+        }
+      ],
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "transformations": []
     }
   ],
   "refresh": "1m",
@@ -323,6 +399,163 @@
           "value": "1000"
         },
         "description": "Row cap for the Rural Code Traffic table."
+      },
+      {
+        "name": "loop_min_entities",
+        "label": "Loop: min entities",
+        "type": "custom",
+        "hide": 0,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false,
+        "query": "2,3,4",
+        "options": [
+          {
+            "selected": true,
+            "text": "2",
+            "value": "2"
+          },
+          {
+            "selected": false,
+            "text": "3",
+            "value": "3"
+          },
+          {
+            "selected": false,
+            "text": "4",
+            "value": "4"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "2",
+          "value": "2"
+        },
+        "description": "A pair must appear on at least this many entities to count as a loop. 2 means the same ANI+DNIS was seen on one entity and then another."
+      },
+      {
+        "name": "loop_min_legs",
+        "label": "Loop: min legs",
+        "type": "custom",
+        "hide": 0,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false,
+        "query": "2,5,10,20,50",
+        "options": [
+          {
+            "selected": false,
+            "text": "2",
+            "value": "2"
+          },
+          {
+            "selected": false,
+            "text": "5",
+            "value": "5"
+          },
+          {
+            "selected": true,
+            "text": "10",
+            "value": "10"
+          },
+          {
+            "selected": false,
+            "text": "20",
+            "value": "20"
+          },
+          {
+            "selected": false,
+            "text": "50",
+            "value": "50"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "10",
+          "value": "10"
+        },
+        "description": "Minimum call legs for the pair. Filters ordinary retries from genuine loops."
+      },
+      {
+        "name": "loop_window_sec",
+        "label": "Loop: window (sec)",
+        "type": "custom",
+        "hide": 0,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false,
+        "query": "5,30,60,300,3600",
+        "options": [
+          {
+            "selected": false,
+            "text": "5",
+            "value": "5"
+          },
+          {
+            "selected": true,
+            "text": "30",
+            "value": "30"
+          },
+          {
+            "selected": false,
+            "text": "60",
+            "value": "60"
+          },
+          {
+            "selected": false,
+            "text": "300",
+            "value": "300"
+          },
+          {
+            "selected": false,
+            "text": "3600",
+            "value": "3600"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "30",
+          "value": "30"
+        },
+        "description": "All legs must fall within this many seconds. A routing loop re-enters the network almost immediately."
+      },
+      {
+        "name": "loop_row_limit",
+        "label": "Loop: max rows",
+        "type": "custom",
+        "hide": 0,
+        "skipUrlSync": false,
+        "multi": false,
+        "includeAll": false,
+        "query": "100,500,1000,5000",
+        "options": [
+          {
+            "selected": false,
+            "text": "100",
+            "value": "100"
+          },
+          {
+            "selected": false,
+            "text": "500",
+            "value": "500"
+          },
+          {
+            "selected": true,
+            "text": "1000",
+            "value": "1000"
+          },
+          {
+            "selected": false,
+            "text": "5000",
+            "value": "5000"
+          }
+        ],
+        "current": {
+          "selected": true,
+          "text": "1000",
+          "value": "1000"
+        },
+        "description": "Row cap for the Loop Detection table."
       }
     ]
   },

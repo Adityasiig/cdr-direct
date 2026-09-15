@@ -13,6 +13,13 @@
                  concurrent queries at 96 GiB so a burst of heavy panel loads
                  can never starve live ingest on the 251 GiB host. -->
             <max_memory_usage_for_user>103079215104</max_memory_usage_for_user>
+            <!-- Spill GROUP BY to disk past 8 GiB. Loop Detection groups
+                 ~70M rows by (ANI, DNIS) over a 24h window, which peaks
+                 ~20 GiB fully in RAM; spilling holds it near 9 GiB. Set on
+                 the profile because a readonly user cannot change it
+                 per-query (code 164). -->
+            <max_bytes_before_external_group_by>8589934592</max_bytes_before_external_group_by>
+            <max_bytes_before_external_sort>8589934592</max_bytes_before_external_sort>
             <max_concurrent_queries_for_user>12</max_concurrent_queries_for_user>
             <constraints>
                 <!-- Grafana's ClickHouse plugin applies this setting to each
