@@ -228,8 +228,8 @@
       "id": 1,
       "type": "table",
       "pluginVersion": "12.4.0",
-      "title": "Looping ANI + DNIS across entities (latest ${loop_row_limit})",
-      "description": "Same ANI and DNIS seen on more than one entity inside a short window - the call left one entity and re-entered the network through another instead of terminating. One row per ANI+DNIS pair, worst first by leg count. Tune with the Loop: variables above. Export via the panel menu: Inspect > Data > Download CSV.",
+      "title": "Looping calls - every leg (latest ${loop_row_limit})",
+      "description": "Every call leg belonging to a looping ANI+DNIS pair, grouped together so the legs of one loop sit on consecutive rows. A loop is the same ANI and DNIS seen on more than one entity inside the window set above. Columns show which entity took the leg, the customer trunk it came in on, the vendor and vendor trunk it went out to, and the SIP reason it ended with. Export via the panel menu: Inspect > Data > Download CSV.",
       "datasource": {
         "type": "grafana-clickhouse-datasource",
         "uid": "cdr-clickhouse"
@@ -251,7 +251,7 @@
           "format": 1,
           "queryType": "table",
           "pluginVersion": "4.15.0",
-          "rawSql": "WITH hits AS ( SELECT cityHash64(from_did, to_did) AS pair_hash FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY pair_hash HAVING uniqUpTo(4)(entity) >= ${loop_min_entities} AND count() >= ${loop_min_legs} AND max(event_time) - min(event_time) <= ${loop_window_sec} ORDER BY count() DESC LIMIT ${loop_row_limit}) SELECT from_did AS `ANI`, to_did AS `DNIS`, uniqExact(entity) AS `Entities`, arrayStringConcat(arraySort(groupUniqArray(entity)), ', ') AS `Entity List`, count() AS `Legs`, countIf(sip_code = 200) AS `Answered`, max(event_time) - min(event_time) AS `Span Sec`, uniqExact(orig_trunk_group_name) AS `Cust Trunks`, uniqExact(term_carrier_name) AS `Term Vendors`, min(event_time) AS `First Seen`, max(event_time) AS `Last Seen` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND cityHash64(from_did, to_did) IN (SELECT pair_hash FROM hits) GROUP BY from_did, to_did HAVING uniqExact(entity) >= ${loop_min_entities} ORDER BY `Legs` DESC LIMIT ${loop_row_limit}",
+          "rawSql": "WITH looping_pairs AS ( SELECT cityHash64(from_did, to_did) AS pair_hash FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) GROUP BY pair_hash HAVING uniqUpTo(4)(entity) >= ${loop_min_entities} AND count() >= ${loop_min_legs} AND max(event_time) - min(event_time) <= ${loop_window_sec} ORDER BY count() DESC LIMIT 500) SELECT call_start_time AS `Time`, from_did AS `ANI`, to_did AS `DNIS`, entity AS `Entity`, orig_trunk_group_name AS `Customer Trunk`, term_carrier_name AS `Vendor`, term_trunk_group_name AS `Vendor Trunk`, sip_code AS `SIP Code`, coalesce(nullIf(reason, ''), nullIf(sip_reason, ''), 'Not provided') AS `SIP Reason`, if(sip_code = 200, 'Answered', 'Failed') AS `Result`, duration_real AS `Duration Sec`, callid AS `Call ID` FROM cdr.raw_cdr WHERE $__timeFilter(event_time) AND notEmpty(from_did) AND notEmpty(to_did) AND cityHash64(from_did, to_did) IN (SELECT pair_hash FROM looping_pairs) ORDER BY from_did, to_did, event_time, record_key LIMIT ${loop_row_limit}",
           "meta": {
             "builderOptions": {
               "columns": [],
