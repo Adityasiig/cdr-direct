@@ -1,5 +1,14 @@
 services:
   clickhouse:
+    # Cap container logs. A ClickHouse error loop once wrote 35 MB/s and
+    # left 109 GB of json.log on /data; the daemon-level log-opts in
+    # /etc/docker/daemon.json are not applied to these containers (their
+    # LogConfig comes back empty), so the limit is set per service here.
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     build:
       context: .
       dockerfile: Dockerfile.clickhouse
@@ -49,6 +58,15 @@ services:
     stop_grace_period: 60s
 
   cdr-direct:
+    # Cap container logs. A ClickHouse error loop once wrote 35 MB/s and
+    # left 109 GB of json.log on /data; the daemon-level log-opts in
+    # /etc/docker/daemon.json are not applied to these containers (their
+    # LogConfig comes back empty), so the limit is set per service here.
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     build:
       context: .
       args:
@@ -99,6 +117,15 @@ services:
     stop_grace_period: 30s
 
   cdr-clickhouse-ingester:
+    # Cap container logs. A ClickHouse error loop once wrote 35 MB/s and
+    # left 109 GB of json.log on /data; the daemon-level log-opts in
+    # /etc/docker/daemon.json are not applied to these containers (their
+    # LogConfig comes back empty), so the limit is set per service here.
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     build:
       context: .
       args:
@@ -146,6 +173,15 @@ services:
         condition: service_healthy
 
   cdr-cache-warmer:
+    # Cap container logs. A ClickHouse error loop once wrote 35 MB/s and
+    # left 109 GB of json.log on /data; the daemon-level log-opts in
+    # /etc/docker/daemon.json are not applied to these containers (their
+    # LogConfig comes back empty), so the limit is set per service here.
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     build:
       context: .
       args:
@@ -170,6 +206,15 @@ services:
         condition: service_healthy
 
   grafana:
+    # Cap container logs. A ClickHouse error loop once wrote 35 MB/s and
+    # left 109 GB of json.log on /data; the daemon-level log-opts in
+    # /etc/docker/daemon.json are not applied to these containers (their
+    # LogConfig comes back empty), so the limit is set per service here.
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
     build:
       context: .
       dockerfile: Dockerfile.grafana
