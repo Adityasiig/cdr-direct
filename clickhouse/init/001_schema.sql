@@ -71,6 +71,20 @@ ORDER BY
     sip_code,
     record_key
 )
+-- Keep today plus the previous 14 calendar days of raw CDRs.
+--
+-- Mirrors /usr/local/sbin/cdr-retention-cleanup.sh, which applies the same
+-- 15-day window to the raw CSV files on disk. Without this the table only
+-- grew: it reached 1.28 TiB across 9.54 billion rows and was adding ~28 GB a
+-- day, which filled /data.
+--
+-- The hourly rollups (cdr_hourly_media_ip, sip_reason_cust_state_hourly) are
+-- fed by materialized views on insert and are NOT covered by this TTL, so
+-- history older than 15 days stays queryable through them - together they are
+-- ~47 GB for the full period. Dashboards default to a 24h window and the API
+-- caps queries at CDR_MAX_QUERY_DAYS (31), so raw detail beyond this window
+-- was not being read.
+TTL toDate(event_time) + INTERVAL 15 DAY
 SETTINGS index_granularity = 8192;
 
 CREATE TABLE IF NOT EXISTS cdr.ingest_log

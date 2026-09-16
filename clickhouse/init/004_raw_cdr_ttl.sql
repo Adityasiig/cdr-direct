@@ -1,0 +1,17 @@
+-- Enforce the 15-day raw CDR retention on an existing deployment.
+--
+-- 001_schema.sql carries the TTL in the CREATE TABLE, but that only applies to
+-- a fresh volume: the init scripts run against an already-populated database
+-- where CREATE TABLE IF NOT EXISTS is a no-op. This ALTER is what actually
+-- puts the TTL on a table that predates it.
+--
+-- Idempotent: setting the same TTL twice is a metadata no-op and does not
+-- re-materialize anything.
+--
+-- Note this only attaches the rule. ClickHouse then removes expired rows
+-- during background merges; the initial pass rewrites every existing part and
+-- on a table this size takes a while. Whole partitions that are entirely
+-- expired can be reclaimed immediately with
+--   ALTER TABLE cdr.raw_cdr DROP PARTITION 'YYYYMM'
+-- which is how the July 2026 partition (119 GiB) was freed.
+ALTER TABLE cdr.raw_cdr MODIFY TTL toDate(event_time) + INTERVAL 15 DAY;
