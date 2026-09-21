@@ -342,6 +342,54 @@
                 "value": 0
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Answered"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ASR %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
           }
         ]
       },
@@ -370,7 +418,7 @@
           "editorType": "sql",
           "format": 1,
           "queryType": "sql",
-          "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Trunk`, term_carrier_name AS Vendor, term_trunk_group_name AS `Termination Trunk`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name ORDER BY CDRs DESC LIMIT 50",
+          "rawSql": "SELECT term_media_ip AS `Termination Media IP`, orig_trunk_group_name AS `Incoming Trunk`, term_carrier_name AS Vendor, term_trunk_group_name AS `Termination Trunk`, max(hour) AS `Last Seen`, sum(attempts) AS CDRs, sum(completions) AS Answered, sum(attempts) - sum(completions) AS Failed, round(100.0 * sum(completions) / nullIf(sum(attempts), 0), 2) AS `ASR %` FROM cdr.cdr_hourly_media_ip WHERE $__timeFilter(hour) AND term_media_ip != '(none)' AND $__conditionalAll(entity = ${entity:singlequote}, $entity) AND $__conditionalAll(orig_trunk_group_name = ${origin_trunk:singlequote}, $origin_trunk) AND $__conditionalAll(term_carrier_name = ${vendor:singlequote}, $vendor) AND $__conditionalAll(term_trunk_group_name = ${trunk:singlequote}, $trunk) AND $__conditionalAll(term_media_ip = ${media_ip:singlequote}, $media_ip) GROUP BY term_media_ip, orig_trunk_group_name, term_carrier_name, term_trunk_group_name ORDER BY CDRs DESC LIMIT 50",
           "refId": "A"
         }
       ],
