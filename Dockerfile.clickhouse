@@ -15,6 +15,15 @@ COPY clickhouse/data/ip_isp_cidr.tsv.gz /cdr-source/ip_isp_cidr.tsv.gz
 RUN gunzip -f /cdr-source/ip_isp_cidr.tsv.gz \
     && chown clickhouse:clickhouse /cdr-source/ip_isp_cidr.tsv
 
+# IP -> ISP name and IP -> location sources (DB-IP Lite, "CIDR<TAB>value").
+# Read by the ip_trie dictionaries cdr.ip_isp_name and cdr.ip_location (see
+# clickhouse/init/005_ip_isp_location_dicts.sql). These carry registered org
+# names and geo-location, unlike the raw AS handles in ip_isp_cidr.tsv.
+COPY clickhouse/data/ip_isp_trie.tsv.gz /cdr-source/ip_isp_trie.tsv.gz
+COPY clickhouse/data/ip_loc_trie.tsv.gz /cdr-source/ip_loc_trie.tsv.gz
+RUN gunzip -f /cdr-source/ip_isp_trie.tsv.gz /cdr-source/ip_loc_trie.tsv.gz \
+    && chown clickhouse:clickhouse /cdr-source/ip_isp_trie.tsv /cdr-source/ip_loc_trie.tsv
+
 # Rural NPA-NXX billed prefixes, loaded into cdr.rural_prefix_list by
 # clickhouse/init/003_rural_prefixes.sql. Under user_files_path so file() can
 # read it during init.
