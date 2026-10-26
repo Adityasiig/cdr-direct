@@ -568,6 +568,10 @@ table td.customer {
 .dur-fill { display: block; height: 100%; background: var(--blue); border-radius: 3px 0 0 3px; transition: width .3s ease; }
 .dur-val { font-size: 0.82rem; text-align: right; font-variant-numeric: tabular-nums; }
 
+/* OCN inline column */
+td.ocn { white-space: nowrap; }
+td.ocn .ocn-name { font-size: 0.72rem; display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; }
   .dur-fill { transition: none; }

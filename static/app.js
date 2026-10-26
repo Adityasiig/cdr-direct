@@ -716,6 +716,8 @@
         String(r.term_code || '').toLowerCase().includes(q) ||
         String(r.state || '').toLowerCase().includes(q) ||
         String(r.ratecenter || '').toLowerCase().includes(q) ||
+        String(r.ocn || '').toLowerCase().includes(q) ||
+        String(r.ocn_name || '').toLowerCase().includes(q) ||
         String(r.customer || '').toLowerCase().includes(q)
       );
     }
@@ -745,6 +747,7 @@
       '<th data-sort="customer" class="col-customer">Origin trunk</th>' +
       '<th data-sort="code">Origin billed prefix</th>' +
       '<th data-sort="term_code">Termination billed prefix</th>' +
+      '<th data-sort="ocn">OCN</th>' +
       '<th data-sort="state">State</th>' +
       '<th data-sort="ratecenter">Ratecenter</th>' +
       '<th data-sort="x5u_url">STIR X5U</th>' +
@@ -766,7 +769,7 @@
           state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
         } else {
           state.sortKey = k;
-          state.sortDir = (k === 'code' || k === 'term_code' || k === 'state' || k === 'ratecenter' || k === 'customer' || k === 'x5u_url' || k === 'attest') ? 'asc' : 'desc';
+          state.sortDir = (k === 'code' || k === 'term_code' || k === 'ocn' || k === 'state' || k === 'ratecenter' || k === 'customer' || k === 'x5u_url' || k === 'attest') ? 'asc' : 'desc';
         }
         runQuery();
       });
@@ -783,7 +786,7 @@
       : state.filteredRows.length.toLocaleString();
 
     const showCust = state.view === 'customer-code';
-    const colspan = 14;
+    const colspan = 15;
 
     if (state.filteredRows.length === 0) {
       el.tableBody.innerHTML =
@@ -818,6 +821,8 @@
         custCell +
         '<td class="code">' + (r.code || '') + '</td>' +
         '<td class="code">' + (r.term_code || '') + '</td>' +
+        '<td class="ocn" title="' + escapeAttr(r.ocn_name || '') + '">' + escapeHtml(r.ocn || '') +
+          (r.ocn_name ? ' <span class="muted ocn-name">' + escapeHtml(r.ocn_name) + '</span>' : '') + '</td>' +
         '<td>' + escapeHtml(r.state || '') + '</td>' +
         '<td>' + escapeHtml(r.ratecenter || '') + '</td>' +
         '<td class="x5u" title="' + escapeAttr(fullUrl) + '">' + escapeHtml(truncated) + '</td>' +
@@ -851,7 +856,7 @@
         state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
       } else {
         state.sortKey = k;
-        state.sortDir = (k === 'code' || k === 'term_code' || k === 'state' || k === 'ratecenter' || k === 'customer') ? 'asc' : 'desc';
+        state.sortDir = (k === 'code' || k === 'term_code' || k === 'ocn' || k === 'state' || k === 'ratecenter' || k === 'customer') ? 'asc' : 'desc';
       }
       runQuery();
     });
@@ -1072,7 +1077,7 @@
   // ─── (legacy client-side CSV builder — kept dead but replaced above) ─
   // eslint-disable-next-line no-unused-vars
   function _legacy_csv_export() {
-    const baseCols = ['code', 'term_code', 'state', 'ratecenter', 'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin'];
+    const baseCols = ['code', 'term_code', 'ocn', 'ocn_name', 'state', 'ratecenter', 'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin'];
     const cols = state.view === 'customer-code' ? ['customer'].concat(baseCols) : baseCols;
     const lines = [cols.join(',')];
     for (const r of state.filteredRows) {

@@ -68,7 +68,7 @@ ENTITIES = ('MyCallConnect', 'SalamTalk', 'Dialphone', 'Vestacall')
 # (reason IN (...) takes string literals).
 REASON_TOKEN_RE = re.compile(r'^[A-Z0-9_]{1,40}$')
 SORT_FIELDS = {
-    'customer', 'code', 'term_code', 'state', 'ratecenter', 'x5u_url', 'attest',
+    'customer', 'code', 'term_code', 'state', 'ratecenter', 'ocn', 'x5u_url', 'attest',
     'attempts', 'completions', 'asr_pct', 'minutes', 'revenue', 'cost', 'margin',
 }
 QUICK_FILTERS = {'fas-suspect', 'profitable'}
@@ -508,6 +508,7 @@ def compute_usa_codes(body):
         SELECT
           {origin_code} AS code,
           {termination_code} AS term_code,
+          '?' AS ocn,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           COUNT(*) AS attempts,
@@ -541,6 +542,7 @@ def compute_usa_codes(body):
         SELECT
           {origin_code} AS code,
           {termination_code} AS term_code,
+          COALESCE(NULLIF(TRIM(CAST(term_ocn AS VARCHAR)), ''), '?') AS ocn,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           COUNT(*) AS attempts,
@@ -550,9 +552,9 @@ def compute_usa_codes(body):
           ROUND(SUM(orig_cost), 4) AS revenue,
           ROUND(SUM(term_cost), 4) AS cost,
           ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
-        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR'}})
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'term_ocn': 'VARCHAR', 'orig_ocn': 'VARCHAR'}})
         WHERE {where}
-        GROUP BY code, term_code, state, ratecenter
+        GROUP BY code, term_code, ocn, state, ratecenter
         ORDER BY revenue DESC
         """.format(
             origin_code=ORIG_BILLED_CODE_SQL,
@@ -582,6 +584,7 @@ def compute_usa_codes(body):
     if lim > 0 and total_row_count > lim:
         rows = rows[:lim]  # already ORDER BY revenue DESC in SQL
     totals['code_count'] = total_row_count
+    _decorate_ocn_names(rows)
     return {'totals': totals, 'rows': rows, 'row_count': len(rows), 'total_row_count': total_row_count}
 
 
@@ -710,6 +713,98 @@ def compute_usa_duration(body):
     }
 
 
+# OCN -> company name map (built from telcodata.us NPA-NXX assignments).
+# Loaded once at startup; missing file just means codes show without names.
+OCN_NAMES_PATH = os.path.join(BASE_DIR, 'ocn_names.csv')
+
+
+def _load_ocn_names():
+    names = {}
+    try:
+        with open(OCN_NAMES_PATH, encoding='utf-8') as f:
+            for line in f:
+                ocn, _, company = line.rstrip('\n').partition(',')
+                ocn = ocn.strip()
+                if ocn and ocn != 'ocn' and company:
+                    names[ocn] = company.strip().strip('"')
+    except OSError:
+        pass
+    return names
+
+
+OCN_NAMES = _load_ocn_names()
+
+
+def _decorate_ocn_names(rows):
+    for r in rows:
+        r['ocn_name'] = OCN_NAMES.get(r.get('ocn') or '', '')
+    return rows
+
+
+def compute_usa_ocn(body):
+    """
+    Per-termination-OCN aggregate with the same filters as the main report.
+    term_ocn exists only in the raw CSVs (the DuckDB native table was built
+    without it), so this always uses the CSV path. term_ocn/orig_ocn need the
+    VARCHAR override: alphanumeric OCNs (318J) and leading zeros break the
+    sniffer the same way to_did does.
+    """
+    parsed, err = validate_body(body)
+    if err:
+        return {**err[0], '_http_status': err[1]}
+
+    globs = build_csv_glob(
+        parsed['entities'], parsed['start_date'], parsed['end_date'],
+        parsed['start_hour'], parsed['end_hour'],
+    )
+    if not globs:
+        return {'error': 'no entities matched ENTITIES whitelist', '_http_status': 400}
+    glob_list = '[' + ','.join(globs) + ']'
+    where_sql = build_where(parsed['sip_codes'], parsed['customer'], parsed['reasons'])
+    sql = """
+    SELECT
+      COALESCE(NULLIF(TRIM(CAST(term_ocn AS VARCHAR)), ''), '(none)') AS ocn,
+      COUNT(*) AS attempts,
+      COUNT(*) FILTER (WHERE sip_code = 200) AS completions,
+      ROUND(100.0 * COUNT(*) FILTER (WHERE sip_code = 200) / NULLIF(COUNT(*), 0), 2) AS asr_pct,
+      ROUND(SUM(orig_billed_duration) FILTER (WHERE sip_code = 200) / 60.0, 2) AS minutes
+    FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'term_ocn': 'VARCHAR', 'orig_ocn': 'VARCHAR'}})
+    WHERE {where}
+    GROUP BY ocn
+    ORDER BY attempts DESC
+    """.format(glob=glob_list, where=where_sql)
+    rows, err = run_duckdb(sql, timeout=600)
+    if err is not None:
+        return {'error': err, 'sql': sql, '_http_status': 400}
+
+    total_attempts = sum(int(r.get('attempts') or 0) for r in rows)
+    with_ocn = 0
+    out = []
+    for r in rows:
+        ocn = r.get('ocn') or '(none)'
+        attempts = int(r.get('attempts') or 0)
+        if ocn != '(none)':
+            with_ocn += attempts
+        if len(out) < 100:
+            out.append({
+                'ocn': ocn,
+                'company': OCN_NAMES.get(ocn, ''),
+                'attempts': attempts,
+                'completions': int(r.get('completions') or 0),
+                'asr_pct': float(r.get('asr_pct') or 0.0),
+                'minutes': float(r.get('minutes') or 0.0),
+            })
+
+    return {
+        'rows': out,
+        'totals': {
+            'attempts': total_attempts,
+            'distinct_ocn': sum(1 for r in rows if (r.get('ocn') or '(none)') != '(none)'),
+            'ocn_coverage_pct': round(100.0 * with_ocn / total_attempts, 2) if total_attempts else 0.0,
+        },
+    }
+
+
 def compute_usa_customer_codes(body):
     """Per-(origin trunk, USA-code) — DB native if covered, CSV fallback otherwise."""
     parsed, err = validate_body(body)
@@ -737,6 +832,7 @@ def compute_usa_customer_codes(body):
           COALESCE(orig_trunk_group_name, '(none)') AS customer,
           {origin_code} AS code,
           {termination_code} AS term_code,
+          '?' AS ocn,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
@@ -814,6 +910,7 @@ def compute_usa_customer_codes(body):
         filtered_row_count = int(rows[0].get('filtered_row_count') or 0) if rows else 0
         for row in rows:
             row.pop('filtered_row_count', None)
+        _decorate_ocn_names(rows)
         return {
             'totals': totals,
             'customers': totals['customers'],
@@ -835,6 +932,7 @@ def compute_usa_customer_codes(body):
           COALESCE(orig_trunk_group_name, '(none)') AS customer,
           {origin_code} AS code,
           {termination_code} AS term_code,
+          COALESCE(NULLIF(TRIM(CAST(term_ocn AS VARCHAR)), ''), '?') AS ocn,
           COALESCE(term_state, '?') AS state,
           COALESCE(term_ratecenter, '?') AS ratecenter,
           ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
@@ -846,9 +944,9 @@ def compute_usa_customer_codes(body):
           ROUND(SUM(orig_cost), 4) AS revenue,
           ROUND(SUM(term_cost), 4) AS cost,
           ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
-        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'stir_x5u': 'VARCHAR', 'stir_attest': 'VARCHAR', 'stir_orig_id': 'VARCHAR', 'stir_orig_tn': 'VARCHAR', 'stir_dest_tn': 'VARCHAR', 'p_charge_info': 'VARCHAR'}})
+        FROM read_csv_auto({glob}, union_by_name=true, ignore_errors=true, types={{'to_did': 'VARCHAR', 'from_did': 'VARCHAR', 'lrn_did': 'VARCHAR', 'callid': 'VARCHAR', 'orig_billed_prefix': 'VARCHAR', 'term_billed_prefix': 'VARCHAR', 'term_ocn': 'VARCHAR', 'orig_ocn': 'VARCHAR', 'stir_x5u': 'VARCHAR', 'stir_attest': 'VARCHAR', 'stir_orig_id': 'VARCHAR', 'stir_orig_tn': 'VARCHAR', 'stir_dest_tn': 'VARCHAR', 'p_charge_info': 'VARCHAR'}})
         WHERE {where}
-        GROUP BY customer, code, term_code, state, ratecenter
+        GROUP BY customer, code, term_code, ocn, state, ratecenter
         ORDER BY revenue DESC
         """.format(
             origin_code=ORIG_BILLED_CODE_SQL,
@@ -888,6 +986,7 @@ def compute_usa_customer_codes(body):
     lim = parsed.get('limit', 5000)
     if lim > 0 and total_row_count > lim:
         rows = rows[:lim]
+    _decorate_ocn_names(rows)
     return {
         'totals': totals,
         'customers': totals['customers'],
@@ -1364,6 +1463,17 @@ def api_usa_duration():
     return jsonify(result), status
 
 
+@app.route('/api/usa-ocn', methods=['POST'])
+def api_usa_ocn():
+    if not check_auth():
+        return jsonify({'error': 'unauthorized'}), 401
+    body = request.get_json(force=True, silent=True) or {}
+    body.pop('_export', None)
+    force = bool(body.get('force_refresh'))
+    result, status = cached_compute('usa-ocn', body, compute_usa_ocn, force=force)
+    return jsonify(result), status
+
+
 @app.route('/api/cache-stats', methods=['GET'])
 def api_cache_stats():
     if not check_auth():
@@ -1490,11 +1600,15 @@ def build_customer_codes_export_sql(parsed, use_db):
             parsed['sip_codes'], parsed['customer'], parsed['reasons'],
         )
 
+    # cdr_records has no term_ocn column; only the raw-CSV source can expose it.
+    ocn_expr = ("'?' AS ocn" if use_db
+                else "COALESCE(NULLIF(TRIM(CAST(term_ocn AS VARCHAR)), ''), '?') AS ocn")
     grouped_sql = """
       SELECT
         COALESCE(orig_trunk_group_name, '(none)') AS origin_trunk,
         {origin_code} AS code,
         {termination_code} AS term_code,
+        {ocn_expr},
         COALESCE(term_state, '?') AS state,
         COALESCE(term_ratecenter, '?') AS ratecenter,
         ANY_VALUE(COALESCE(NULLIF(stir_x5u, ''), '(unsigned)')) AS x5u_url,
@@ -1508,10 +1622,11 @@ def build_customer_codes_export_sql(parsed, use_db):
         ROUND(SUM(orig_cost) - SUM(term_cost), 4) AS margin
       FROM {source}
       WHERE {where}
-      GROUP BY origin_trunk, code, term_code, state, ratecenter
+      GROUP BY origin_trunk, code, term_code, ocn, state, ratecenter
     """.format(
         origin_code=ORIG_BILLED_CODE_SQL,
         termination_code=TERM_BILLED_CODE_SQL,
+        ocn_expr=ocn_expr,
         source=source_sql,
         where=where_sql,
     )
@@ -1527,7 +1642,7 @@ def build_customer_codes_export_sql(parsed, use_db):
         sort_by = 'origin_trunk'
     sql = """
       SELECT
-        origin_trunk, code, term_code, state, ratecenter, x5u_url, attest,
+        origin_trunk, code, term_code, ocn, state, ratecenter, x5u_url, attest,
         attempts, completions, asr_pct, minutes, revenue, cost, margin
       FROM ({grouped}) grouped
       {row_filter}

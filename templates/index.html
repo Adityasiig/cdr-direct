@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="cdr-auth-mode" content="{{ auth_mode|default('token') }}">
   <title>CDR Reports | 46labs</title>
-  <link rel="stylesheet" href="/static/style.css?v=17">
+  <link rel="stylesheet" href="/static/style.css?v=19">
 </head>
 <body>
   <header>
@@ -210,6 +210,7 @@
               <th data-sort="customer" class="col-customer">Origin trunk</th>
               <th data-sort="code">Origin billed prefix</th>
               <th data-sort="term_code">Termination billed prefix</th>
+              <th data-sort="ocn">OCN</th>
               <th data-sort="state">State</th>
               <th data-sort="ratecenter">Ratecenter</th>
               <th data-sort="x5u_url">STIR X5U</th>
@@ -224,7 +225,7 @@
             </tr>
           </thead>
           <tbody id="results-body">
-            <tr><td colspan="14" class="muted center">No data yet — pick a date and click <strong>Run query</strong> (or enable ⚡ Auto)</td></tr>
+            <tr><td colspan="15" class="muted center">No data yet — pick a date and click <strong>Run query</strong> (or enable ⚡ Auto)</td></tr>
           </tbody>
         </table>
       </div>
@@ -245,6 +246,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=18"></script>
+  <script src="/static/app.js?v=20"></script>
 </body>
 </html>
