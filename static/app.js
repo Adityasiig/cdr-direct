@@ -812,8 +812,8 @@
 
       // Truncate long X5U URL for display, keep full in title
       const fullUrl = String(r.x5u_url || '');
-      const truncated = fullUrl.length > 60
-        ? fullUrl.slice(0, 32) + '…' + fullUrl.slice(-20)
+      const truncated = fullUrl.length > 34
+        ? fullUrl.slice(0, 18) + '…' + fullUrl.slice(-12)
         : fullUrl;
 
       parts.push(

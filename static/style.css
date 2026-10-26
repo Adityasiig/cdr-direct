@@ -569,8 +569,10 @@ table td.customer {
 .dur-val { font-size: 0.82rem; text-align: right; font-variant-numeric: tabular-nums; }
 
 /* OCN inline column */
-td.ocn { white-space: nowrap; }
-td.ocn .ocn-name { font-size: 0.72rem; display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+td.ocn { min-width: 215px; }
+td.ocn .ocn-name { font-size: 0.72rem; display: block; }
+/* Reclaim width from the URL column so the carrier name fits in full */
+td.x5u { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; }
